@@ -1,0 +1,24 @@
+{
+  "name": "lombokserde",
+  "version": "0.1.0",
+  "description": "Zero-dependency serialization library: JSON, TOML, MessagePack",
+  "type": "module",
+  "main": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node --input-type=module -e \"import('./dist/esm/index.js').then(m => console.log('OK'))\""
+  },
+  "author": "CodingLombok <codinglombok@gmail.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codinglombok/LombokSerde"
+  }
+}

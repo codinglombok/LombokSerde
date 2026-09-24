@@ -1,0 +1,32 @@
+# Rust
+/rust/target/
+**/*.rs.bk
+Cargo.lock
+
+# Node / TypeScript
+node_modules/
+/typescript/dist/
+/typescript/node_modules/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Go
+/go/vendor/
+
+# PHP
+/php/vendor/
+composer.lock
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
