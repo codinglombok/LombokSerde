@@ -1,7 +1,20 @@
+# ===== Lombok Ecosystem — dokumen internal (tidak di-commit; ADR-024) =====
+/map
+/Map_*.md
+/SPEC_*.md
+/Stucture Repo_*.md
+/TECH DEBT_*.md
+/Architecture_*.md
+/Masterplan_*.md
+/docs/*architecture*.*
+/docs/*masterplan*.*
+/docs/Architecture_*.md
+/docs/Masterplan_*.md
+/docs/TECH DEBT_*.md
+
 # Rust
 /rust/target/
 **/*.rs.bk
-Cargo.lock
 
 # Node / TypeScript
 node_modules/
@@ -14,15 +27,20 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
-dist/
-build/
+/python/dist/
+/python/build/
+.mypy_cache/
+.ruff_cache/
+/coverage.xml
+/htmlcov/
 
 # Go
 /go/vendor/
+/go/cover.out
 
 # PHP
 /php/vendor/
-composer.lock
+/php/.phpunit.result.cache
 
 # OS / editor
 .DS_Store

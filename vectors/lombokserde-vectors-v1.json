@@ -1,0 +1,3435 @@
+{
+  "meta": {
+    "package": "lombokserde",
+    "vector_set": 1,
+    "generator": "vectors/build_vectors.py",
+    "contract": "see docs/SPEC_LombokSerde_v0.1.0.md",
+    "notes": "msgpack inputs/encodings are lowercase hex; all other encodings are UTF-8 text"
+  },
+  "cases": [
+    {
+      "id": "json_dec_null",
+      "format": "json",
+      "op": "decode",
+      "input": "null",
+      "expect": {
+        "value": null,
+        "encoding": "null"
+      }
+    },
+    {
+      "id": "json_dec_true",
+      "format": "json",
+      "op": "decode",
+      "input": "true",
+      "expect": {
+        "value": true,
+        "encoding": "true"
+      }
+    },
+    {
+      "id": "json_dec_false",
+      "format": "json",
+      "op": "decode",
+      "input": "false",
+      "expect": {
+        "value": false,
+        "encoding": "false"
+      }
+    },
+    {
+      "id": "json_dec_int_zero",
+      "format": "json",
+      "op": "decode",
+      "input": "0",
+      "expect": {
+        "value": {
+          "$i": "0"
+        },
+        "encoding": "0"
+      }
+    },
+    {
+      "id": "json_dec_int_neg_zero",
+      "format": "json",
+      "op": "decode",
+      "input": "-0",
+      "expect": {
+        "value": {
+          "$i": "0"
+        },
+        "encoding": "0"
+      }
+    },
+    {
+      "id": "json_dec_int_i64min",
+      "format": "json",
+      "op": "decode",
+      "input": "-9223372036854775808",
+      "expect": {
+        "value": {
+          "$i": "-9223372036854775808"
+        },
+        "encoding": "-9223372036854775808"
+      }
+    },
+    {
+      "id": "json_dec_int_i64max",
+      "format": "json",
+      "op": "decode",
+      "input": "9223372036854775807",
+      "expect": {
+        "value": {
+          "$i": "9223372036854775807"
+        },
+        "encoding": "9223372036854775807"
+      }
+    },
+    {
+      "id": "json_dec_int_u64max",
+      "format": "json",
+      "op": "decode",
+      "input": "18446744073709551615",
+      "expect": {
+        "value": {
+          "$u": "18446744073709551615"
+        },
+        "encoding": "18446744073709551615"
+      }
+    },
+    {
+      "id": "json_dec_int_range_hi",
+      "format": "json",
+      "op": "decode",
+      "input": "18446744073709551616",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_INT_RANGE",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_int_range_lo",
+      "format": "json",
+      "op": "decode",
+      "input": "-9223372036854775809",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_INT_RANGE",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_float_simple",
+      "format": "json",
+      "op": "decode",
+      "input": "1.5",
+      "expect": {
+        "value": {
+          "$f": "1.5"
+        },
+        "encoding": "1.5"
+      }
+    },
+    {
+      "id": "json_dec_float_exp",
+      "format": "json",
+      "op": "decode",
+      "input": "1e2",
+      "expect": {
+        "value": {
+          "$f": "100.0"
+        },
+        "encoding": "100.0"
+      }
+    },
+    {
+      "id": "json_dec_float_neg_zero",
+      "format": "json",
+      "op": "decode",
+      "input": "-0.0",
+      "expect": {
+        "value": {
+          "$f": "-0.0"
+        },
+        "encoding": "-0.0"
+      }
+    },
+    {
+      "id": "json_dec_float_pi",
+      "format": "json",
+      "op": "decode",
+      "input": "3.141592653589793",
+      "expect": {
+        "value": {
+          "$f": "3.141592653589793"
+        },
+        "encoding": "3.141592653589793"
+      }
+    },
+    {
+      "id": "json_dec_float_tiny",
+      "format": "json",
+      "op": "decode",
+      "input": "5e-324",
+      "expect": {
+        "value": {
+          "$f": "5e-324"
+        },
+        "encoding": "5e-324"
+      }
+    },
+    {
+      "id": "json_dec_float_huge",
+      "format": "json",
+      "op": "decode",
+      "input": "1.5e300",
+      "expect": {
+        "value": {
+          "$f": "1.5e+300"
+        },
+        "encoding": "1.5e+300"
+      }
+    },
+    {
+      "id": "json_dec_float_exp_hi",
+      "format": "json",
+      "op": "decode",
+      "input": "1e21",
+      "expect": {
+        "value": {
+          "$f": "1e+21"
+        },
+        "encoding": "1e+21"
+      }
+    },
+    {
+      "id": "json_dec_float_exp_hi2",
+      "format": "json",
+      "op": "decode",
+      "input": "1e20",
+      "expect": {
+        "value": {
+          "$f": "100000000000000000000.0"
+        },
+        "encoding": "100000000000000000000.0"
+      }
+    },
+    {
+      "id": "json_dec_float_exp_lo",
+      "format": "json",
+      "op": "decode",
+      "input": "1.5e-7",
+      "expect": {
+        "value": {
+          "$f": "1.5e-7"
+        },
+        "encoding": "1.5e-7"
+      }
+    },
+    {
+      "id": "json_dec_float_one_micro",
+      "format": "json",
+      "op": "decode",
+      "input": "0.000001",
+      "expect": {
+        "value": {
+          "$f": "0.000001"
+        },
+        "encoding": "0.000001"
+      }
+    },
+    {
+      "id": "json_dec_str_simple",
+      "format": "json",
+      "op": "decode",
+      "input": "\"hello\"",
+      "expect": {
+        "value": "hello",
+        "encoding": "\"hello\""
+      }
+    },
+    {
+      "id": "json_dec_str_unicode",
+      "format": "json",
+      "op": "decode",
+      "input": "\"caf\\u00e9 \\u4e2d\\u6587\"",
+      "expect": {
+        "value": "café 中文",
+        "encoding": "\"café 中文\""
+      }
+    },
+    {
+      "id": "json_dec_str_surrogate_pair",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\ud83d\\ude00\"",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 7
+        }
+      }
+    },
+    {
+      "id": "json_dec_str_escapes",
+      "format": "json",
+      "op": "decode",
+      "input": "\"a\\\"b\\\\c\\nd\\te\\rf\\bg\\fh\"",
+      "expect": {
+        "value": "a\"b\\c\nd\te\rf\bg\fh",
+        "encoding": "\"a\\\"b\\\\c\\nd\\te\\rf\\bg\\fh\""
+      }
+    },
+    {
+      "id": "json_dec_str_control_esc",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\u0001\\u001f\"",
+      "expect": {
+        "value": "\u0001\u001f",
+        "encoding": "\"\\u0001\\u001f\""
+      }
+    },
+    {
+      "id": "json_dec_str_empty",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\"",
+      "expect": {
+        "value": "",
+        "encoding": "\"\""
+      }
+    },
+    {
+      "id": "json_dec_arr_empty",
+      "format": "json",
+      "op": "decode",
+      "input": "[]",
+      "expect": {
+        "value": [],
+        "encoding": "[]"
+      }
+    },
+    {
+      "id": "json_dec_arr_nested",
+      "format": "json",
+      "op": "decode",
+      "input": "[1,[2,[3]],null,true]",
+      "expect": {
+        "value": [
+          {
+            "$i": "1"
+          },
+          [
+            {
+              "$i": "2"
+            },
+            [
+              {
+                "$i": "3"
+              }
+            ]
+          ],
+          null,
+          true
+        ],
+        "encoding": "[1,[2,[3]],null,true]"
+      }
+    },
+    {
+      "id": "json_dec_obj_empty",
+      "format": "json",
+      "op": "decode",
+      "input": "{}",
+      "expect": {
+        "value": {
+          "$t": []
+        },
+        "encoding": "{}"
+      }
+    },
+    {
+      "id": "json_dec_obj_sorted",
+      "format": "json",
+      "op": "decode",
+      "input": "{\"b\":1,\"a\":2}",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "b",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        },
+        "encoding": "{\"a\":2,\"b\":1}"
+      }
+    },
+    {
+      "id": "json_dec_obj_ws",
+      "format": "json",
+      "op": "decode",
+      "input": "  {  \"b\" : 1 ,\n \"a\" : 2 }  ",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "b",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        },
+        "encoding": "{\"a\":2,\"b\":1}"
+      }
+    },
+    {
+      "id": "json_dec_obj_dup_key",
+      "format": "json",
+      "op": "decode",
+      "input": "{\"a\":1,\"a\":2}",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 13
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_lone_surrogate",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\ud83d\"",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 7
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_bad_escape",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\x\"",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_raw_control",
+      "format": "json",
+      "op": "decode",
+      "input": "\"a\nb\"",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_tru",
+      "format": "json",
+      "op": "decode",
+      "input": "tru",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_no_value",
+      "format": "json",
+      "op": "decode",
+      "input": "{,}",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 1
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_trailing",
+      "format": "json",
+      "op": "decode",
+      "input": "1 2",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_TRAILING",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_trailing_ws_ok",
+      "format": "json",
+      "op": "decode",
+      "input": "1 \n\t ",
+      "expect": {
+        "value": {
+          "$i": "1"
+        },
+        "encoding": "1"
+      }
+    },
+    {
+      "id": "json_dec_syntax_leading_zero",
+      "format": "json",
+      "op": "decode",
+      "input": "01",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_TRAILING",
+          "offset": 1
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_plus",
+      "format": "json",
+      "op": "decode",
+      "input": "+1",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_dot_first",
+      "format": "json",
+      "op": "decode",
+      "input": ".5",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_syntax_nan_word",
+      "format": "json",
+      "op": "decode",
+      "input": "NaN",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "json_dec_utf8_invalid",
+      "format": "json",
+      "op": "decode",
+      "input_hex": "2261ff6222",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_UTF8",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "json_dec_depth_ok",
+      "format": "json",
+      "op": "decode",
+      "input": "[[[[1]]]]",
+      "options": {
+        "depth": 4
+      },
+      "expect": {
+        "value": [
+          [
+            [
+              [
+                {
+                  "$i": "1"
+                }
+              ]
+            ]
+          ]
+        ],
+        "encoding": "[[[[1]]]]"
+      }
+    },
+    {
+      "id": "json_dec_depth_exceeded",
+      "format": "json",
+      "op": "decode",
+      "input": "[[[[1]]]]",
+      "options": {
+        "depth": 3
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_DEPTH",
+          "offset": 3
+        }
+      }
+    },
+    {
+      "id": "json_dec_depth_obj",
+      "format": "json",
+      "op": "decode",
+      "input": "{\"a\":{\"b\":{\"c\":1}}}",
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_DEPTH",
+          "offset": 10
+        }
+      }
+    },
+    {
+      "id": "json_enc_sorted_keys",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "M",
+            {
+              "$i": "3"
+            }
+          ],
+          [
+            "a",
+            {
+              "$i": "2"
+            }
+          ],
+          [
+            "z",
+            {
+              "$i": "1"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "{\"M\":3,\"a\":2,\"z\":1}",
+        "value": {
+          "$t": [
+            [
+              "M",
+              {
+                "$i": "3"
+              }
+            ],
+            [
+              "a",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "z",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "json_enc_nested",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "k",
+            [
+              {
+                "$i": "1"
+              },
+              {
+                "$f": "2.5"
+              },
+              "x",
+              null,
+              false
+            ]
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "{\"k\":[1,2.5,\"x\",null,false]}",
+        "value": {
+          "$t": [
+            [
+              "k",
+              [
+                {
+                  "$i": "1"
+                },
+                {
+                  "$f": "2.5"
+                },
+                "x",
+                null,
+                false
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "json_enc_unicode",
+      "format": "json",
+      "op": "encode",
+      "value": "café 中文 😀",
+      "expect": {
+        "encoding": "\"café 中文 😀\"",
+        "value": "café 中文 😀"
+      }
+    },
+    {
+      "id": "json_enc_escapes",
+      "format": "json",
+      "op": "encode",
+      "value": "a\"b\\c\nd\te\rf\bg\u0001h",
+      "expect": {
+        "encoding": "\"a\\\"b\\\\c\\nd\\te\\rf\\bg\\u0001h\"",
+        "value": "a\"b\\c\nd\te\rf\bg\u0001h"
+      }
+    },
+    {
+      "id": "json_enc_floats",
+      "format": "json",
+      "op": "encode",
+      "value": [
+        {
+          "$f": "1.0"
+        },
+        {
+          "$f": "0.1"
+        },
+        {
+          "$f": "1e+21"
+        },
+        {
+          "$f": "100000000000000000000.0"
+        },
+        {
+          "$f": "1.5e-7"
+        },
+        {
+          "$f": "5e-324"
+        },
+        {
+          "$f": "-0.0"
+        },
+        {
+          "$f": "9007199254740991.0"
+        }
+      ],
+      "expect": {
+        "encoding": "[1.0,0.1,1e+21,100000000000000000000.0,1.5e-7,5e-324,-0.0,9007199254740991.0]",
+        "value": [
+          {
+            "$f": "1.0"
+          },
+          {
+            "$f": "0.1"
+          },
+          {
+            "$f": "1e+21"
+          },
+          {
+            "$f": "100000000000000000000.0"
+          },
+          {
+            "$f": "1.5e-7"
+          },
+          {
+            "$f": "5e-324"
+          },
+          {
+            "$f": "-0.0"
+          },
+          {
+            "$f": "9007199254740991.0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "json_enc_ints",
+      "format": "json",
+      "op": "encode",
+      "value": [
+        {
+          "$i": "-9223372036854775808"
+        },
+        {
+          "$i": "9223372036854775807"
+        },
+        {
+          "$u": "18446744073709551615"
+        },
+        {
+          "$i": "0"
+        }
+      ],
+      "expect": {
+        "encoding": "[-9223372036854775808,9223372036854775807,18446744073709551615,0]",
+        "value": [
+          {
+            "$i": "-9223372036854775808"
+          },
+          {
+            "$i": "9223372036854775807"
+          },
+          {
+            "$u": "18446744073709551615"
+          },
+          {
+            "$i": "0"
+          }
+        ]
+      }
+    },
+    {
+      "id": "json_enc_nan",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$f": "nan"
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_FLOAT_NANINF",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "json_enc_inf",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$f": "inf"
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_FLOAT_NANINF",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "json_enc_bytes_err",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$b": "0102"
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_BYTES",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "json_enc_datetime_err",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "1979-05-27T07:32:00Z"
+        ]
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_DATETIME",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "json_enc_depth_err",
+      "format": "json",
+      "op": "encode",
+      "value": [
+        [
+          [
+            {
+              "$i": "1"
+            }
+          ]
+        ]
+      ],
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_DEPTH",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "json_enc_empty_containers",
+      "format": "json",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            []
+          ],
+          [
+            "b",
+            {
+              "$t": []
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "{\"a\":[],\"b\":{}}",
+        "value": {
+          "$t": [
+            [
+              "a",
+              []
+            ],
+            [
+              "b",
+              {
+                "$t": []
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_dec_scalars",
+      "format": "toml",
+      "op": "decode",
+      "input": "i = 42\nf = 1.5\nb = true\ns = \"hi\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "b",
+              true
+            ],
+            [
+              "f",
+              {
+                "$f": "1.5"
+              }
+            ],
+            [
+              "i",
+              {
+                "$i": "42"
+              }
+            ],
+            [
+              "s",
+              "hi"
+            ]
+          ]
+        },
+        "encoding": "b = true\nf = 1.5\ni = 42\ns = \"hi\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_int_hex",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 0xdead_beef\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$i": "3735928559"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 3735928559\n"
+      }
+    },
+    {
+      "id": "toml_dec_int_oct",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 0o755\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$i": "493"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 493\n"
+      }
+    },
+    {
+      "id": "toml_dec_int_bin",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 0b1010_1010\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$i": "170"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 170\n"
+      }
+    },
+    {
+      "id": "toml_dec_int_underscores",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 1_000_000\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$i": "1000000"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 1000000\n"
+      }
+    },
+    {
+      "id": "toml_dec_int_neg",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = -9223372036854775808\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 24
+        }
+      }
+    },
+    {
+      "id": "toml_dec_float_exp",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 6.626e-34\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$f": "6.626e-34"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 6.626e-34\n"
+      }
+    },
+    {
+      "id": "toml_dec_float_inf_nan",
+      "format": "toml",
+      "op": "decode",
+      "input": "a = inf\nb = -inf\nc = +nan\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$f": "inf"
+              }
+            ],
+            [
+              "b",
+              {
+                "$f": "-inf"
+              }
+            ],
+            [
+              "c",
+              {
+                "$f": "nan"
+              }
+            ]
+          ]
+        },
+        "encoding": "a = inf\nb = -inf\nc = nan\n"
+      }
+    },
+    {
+      "id": "toml_dec_float_underscores",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 1_000.000_1\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$f": "1000.0001"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 1000.0001\n"
+      }
+    },
+    {
+      "id": "toml_dec_str_basic",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = \"a\\\"b\\\\c\\u00e9\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "s",
+              "a\"b\\cé"
+            ]
+          ]
+        },
+        "encoding": "s = \"a\\\"b\\\\cé\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_str_literal",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = 'C:\\path\\no\\escape'\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "s",
+              "C:\\path\\no\\escape"
+            ]
+          ]
+        },
+        "encoding": "s = \"C:\\\\path\\\\no\\\\escape\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_str_ml_basic",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = \"\"\"\nline1\nline \"2\"\n\"\"\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "s",
+              "line1\nline \"2\"\n"
+            ]
+          ]
+        },
+        "encoding": "s = \"line1\\nline \\\"2\\\"\\n\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_str_ml_literal",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = '''\nraw \\n text\n'''\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "s",
+              "raw \\n text\n"
+            ]
+          ]
+        },
+        "encoding": "s = \"raw \\\\n text\\n\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_str_ml_backslash",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = \"\"\"a\\\n    b\"\"\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "s",
+              "ab"
+            ]
+          ]
+        },
+        "encoding": "s = \"ab\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_date",
+      "format": "toml",
+      "op": "decode",
+      "input": "d = 1979-05-27\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "d",
+              {
+                "$d": [
+                  "date",
+                  "1979-05-27"
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "d = 1979-05-27\n"
+      }
+    },
+    {
+      "id": "toml_dec_time",
+      "format": "toml",
+      "op": "decode",
+      "input": "t = 07:32:00.999\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "t",
+              {
+                "$d": [
+                  "time",
+                  "07:32:00.999"
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "t = 07:32:00.999\n"
+      }
+    },
+    {
+      "id": "toml_dec_localdt",
+      "format": "toml",
+      "op": "decode",
+      "input": "dt = 1979-05-27T07:32:00\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "dt",
+              {
+                "$d": [
+                  "localdt",
+                  "1979-05-27T07:32:00"
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "dt = 1979-05-27T07:32:00\n"
+      }
+    },
+    {
+      "id": "toml_dec_offsetdt",
+      "format": "toml",
+      "op": "decode",
+      "input": "dt = 1979-05-27T07:32:00.5-07:00\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "dt",
+              {
+                "$d": [
+                  "offset",
+                  "1979-05-27T07:32:00.5-07:00"
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "dt = 1979-05-27T07:32:00.5-07:00\n"
+      }
+    },
+    {
+      "id": "toml_dec_offsetdt_space_z",
+      "format": "toml",
+      "op": "decode",
+      "input": "dt = 1979-05-27 07:32:00Z\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "dt",
+              {
+                "$d": [
+                  "offset",
+                  "1979-05-27 07:32:00Z"
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "dt = 1979-05-27 07:32:00Z\n"
+      }
+    },
+    {
+      "id": "toml_dec_table",
+      "format": "toml",
+      "op": "decode",
+      "input": "[owner]\nname = \"Tom\"\ndob = 1979-05-27\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "owner",
+              {
+                "$t": [
+                  [
+                    "dob",
+                    {
+                      "$d": [
+                        "date",
+                        "1979-05-27"
+                      ]
+                    }
+                  ],
+                  [
+                    "name",
+                    "Tom"
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "[owner]\ndob = 1979-05-27\nname = \"Tom\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_nested_tables",
+      "format": "toml",
+      "op": "decode",
+      "input": "[a]\nx = 1\n[a.b]\ny = 2\n[a.b.c]\nz = 3\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$t": [
+                  [
+                    "b",
+                    {
+                      "$t": [
+                        [
+                          "c",
+                          {
+                            "$t": [
+                              [
+                                "z",
+                                {
+                                  "$i": "3"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "y",
+                          {
+                            "$i": "2"
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "x",
+                    {
+                      "$i": "1"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "[a]\nx = 1\n[a.b]\ny = 2\n[a.b.c]\nz = 3\n"
+      }
+    },
+    {
+      "id": "toml_dec_dotted_keys",
+      "format": "toml",
+      "op": "decode",
+      "input": "a.b.c = 1\na.d = 2\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$t": [
+                  [
+                    "b",
+                    {
+                      "$t": [
+                        [
+                          "c",
+                          {
+                            "$i": "1"
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "d",
+                    {
+                      "$i": "2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "[a]\nd = 2\n[a.b]\nc = 1\n"
+      }
+    },
+    {
+      "id": "toml_dec_inline_table",
+      "format": "toml",
+      "op": "decode",
+      "input": "point = { x = 1, y = 2, label = \"p\" }\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "point",
+              {
+                "$t": [
+                  [
+                    "label",
+                    "p"
+                  ],
+                  [
+                    "x",
+                    {
+                      "$i": "1"
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "$i": "2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "[point]\nlabel = \"p\"\nx = 1\ny = 2\n"
+      }
+    },
+    {
+      "id": "toml_dec_inline_nested",
+      "format": "toml",
+      "op": "decode",
+      "input": "t = { a = { b = 1 } }\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "t",
+              {
+                "$t": [
+                  [
+                    "a",
+                    {
+                      "$t": [
+                        [
+                          "b",
+                          {
+                            "$i": "1"
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        },
+        "encoding": "[t]\n[t.a]\nb = 1\n"
+      }
+    },
+    {
+      "id": "toml_dec_array",
+      "format": "toml",
+      "op": "decode",
+      "input": "a = [1, 2, 3]\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              [
+                {
+                  "$i": "1"
+                },
+                {
+                  "$i": "2"
+                },
+                {
+                  "$i": "3"
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "a = [1, 2, 3]\n"
+      }
+    },
+    {
+      "id": "toml_dec_array_multiline",
+      "format": "toml",
+      "op": "decode",
+      "input": "a = [\n  1, # one\n  2,\n]\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              [
+                {
+                  "$i": "1"
+                },
+                {
+                  "$i": "2"
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "a = [1, 2]\n"
+      }
+    },
+    {
+      "id": "toml_dec_array_mixed",
+      "format": "toml",
+      "op": "decode",
+      "input": "a = [1, \"two\", [3], { k = 4 }]\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              [
+                {
+                  "$i": "1"
+                },
+                "two",
+                [
+                  {
+                    "$i": "3"
+                  }
+                ],
+                {
+                  "$t": [
+                    [
+                      "k",
+                      {
+                        "$i": "4"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "a = [1, \"two\", [3], { k = 4 }]\n"
+      }
+    },
+    {
+      "id": "toml_dec_aot",
+      "format": "toml",
+      "op": "decode",
+      "input": "[[products]]\nname = \"A\"\n\n[[products]]\nname = \"B\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "products",
+              [
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "A"
+                    ]
+                  ]
+                },
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "B"
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "[[products]]\nname = \"A\"\n[[products]]\nname = \"B\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_aot_subtable",
+      "format": "toml",
+      "op": "decode",
+      "input": "[[fruits]]\nname = \"apple\"\n\n[fruits.physical]\ncolor = \"red\"\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "fruits",
+              [
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "apple"
+                    ],
+                    [
+                      "physical",
+                      {
+                        "$t": [
+                          [
+                            "color",
+                            "red"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "[[fruits]]\nname = \"apple\"\n[fruits.physical]\ncolor = \"red\"\n"
+      }
+    },
+    {
+      "id": "toml_dec_quoted_keys",
+      "format": "toml",
+      "op": "decode",
+      "input": "\"key with space\" = 1\n'lit key' = 2\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "key with space",
+              {
+                "$i": "1"
+              }
+            ],
+            [
+              "lit key",
+              {
+                "$i": "2"
+              }
+            ]
+          ]
+        },
+        "encoding": "\"key with space\" = 1\n\"lit key\" = 2\n"
+      }
+    },
+    {
+      "id": "toml_dec_comments",
+      "format": "toml",
+      "op": "decode",
+      "input": "# header\nx = 1 # trailing\n\n# more\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "x",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        },
+        "encoding": "x = 1\n"
+      }
+    },
+    {
+      "id": "toml_dec_dup_key",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 1\nx = 2\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DUPLICATE",
+          "offset": 11
+        }
+      }
+    },
+    {
+      "id": "toml_dec_dup_table",
+      "format": "toml",
+      "op": "decode",
+      "input": "[a]\nx = 1\n[a]\ny = 2\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DUPLICATE",
+          "offset": 13
+        }
+      }
+    },
+    {
+      "id": "toml_dec_dotted_then_header",
+      "format": "toml",
+      "op": "decode",
+      "input": "a.b = 1\n[a]\nx = 2\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DUPLICATE",
+          "offset": 11
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_bad_value",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = \n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 4
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_leading_zero",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = 01\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 6
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_bad_datetime",
+      "format": "toml",
+      "op": "decode",
+      "input": "d = 1979-13-27\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 4
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_unterminated",
+      "format": "toml",
+      "op": "decode",
+      "input": "s = \"abc\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 8
+        }
+      }
+    },
+    {
+      "id": "toml_dec_utf8_invalid",
+      "format": "toml",
+      "op": "decode",
+      "input_hex": "78203d2027ff270a",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_UTF8",
+          "offset": 5
+        }
+      }
+    },
+    {
+      "id": "toml_dec_depth_header",
+      "format": "toml",
+      "op": "decode",
+      "input": "[a.b.c.d]\nx = 1\n",
+      "options": {
+        "depth": 3
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DEPTH",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "toml_dec_depth_inline",
+      "format": "toml",
+      "op": "decode",
+      "input": "t = { a = { b = 1 } }\n",
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DEPTH",
+          "offset": 10
+        }
+      }
+    },
+    {
+      "id": "toml_enc_scalars",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "b",
+            true
+          ],
+          [
+            "f",
+            {
+              "$f": "1.5"
+            }
+          ],
+          [
+            "i",
+            {
+              "$i": "42"
+            }
+          ],
+          [
+            "s",
+            "hi"
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "b = true\nf = 1.5\ni = 42\ns = \"hi\"\n",
+        "value": {
+          "$t": [
+            [
+              "b",
+              true
+            ],
+            [
+              "f",
+              {
+                "$f": "1.5"
+              }
+            ],
+            [
+              "i",
+              {
+                "$i": "42"
+              }
+            ],
+            [
+              "s",
+              "hi"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_sorted",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            {
+              "$i": "2"
+            }
+          ],
+          [
+            "z",
+            {
+              "$i": "1"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "a = 2\nz = 1\n",
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "z",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_subtables",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            {
+              "$t": [
+                [
+                  "x",
+                  {
+                    "$i": "1"
+                  }
+                ]
+              ]
+            }
+          ],
+          [
+            "b",
+            {
+              "$t": [
+                [
+                  "c",
+                  {
+                    "$t": [
+                      [
+                        "z",
+                        {
+                          "$i": "3"
+                        }
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "y",
+                  {
+                    "$i": "2"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "[a]\nx = 1\n[b]\ny = 2\n[b.c]\nz = 3\n",
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$t": [
+                  [
+                    "x",
+                    {
+                      "$i": "1"
+                    }
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              {
+                "$t": [
+                  [
+                    "c",
+                    {
+                      "$t": [
+                        [
+                          "z",
+                          {
+                            "$i": "3"
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "y",
+                    {
+                      "$i": "2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_aot",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "products",
+            [
+              {
+                "$t": [
+                  [
+                    "name",
+                    "A"
+                  ]
+                ]
+              },
+              {
+                "$t": [
+                  [
+                    "name",
+                    "B"
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "[[products]]\nname = \"A\"\n[[products]]\nname = \"B\"\n",
+        "value": {
+          "$t": [
+            [
+              "products",
+              [
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "A"
+                    ]
+                  ]
+                },
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "B"
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_aot_subtable",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "fruits",
+            [
+              {
+                "$t": [
+                  [
+                    "name",
+                    "apple"
+                  ],
+                  [
+                    "physical",
+                    {
+                      "$t": [
+                        [
+                          "color",
+                          "red"
+                        ]
+                      ]
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "[[fruits]]\nname = \"apple\"\n[fruits.physical]\ncolor = \"red\"\n",
+        "value": {
+          "$t": [
+            [
+              "fruits",
+              [
+                {
+                  "$t": [
+                    [
+                      "name",
+                      "apple"
+                    ],
+                    [
+                      "physical",
+                      {
+                        "$t": [
+                          [
+                            "color",
+                            "red"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_mixed_array",
+      "format": "toml",
+      "op": "encode",
+      "value": [
+        {
+          "$i": "1"
+        },
+        "two",
+        [
+          {
+            "$i": "3"
+          }
+        ],
+        {
+          "$t": [
+            [
+              "k",
+              {
+                "$i": "4"
+              }
+            ]
+          ]
+        }
+      ],
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_ROOT",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "toml_enc_datetime",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "d",
+            {
+              "$d": [
+                "date",
+                "1979-05-27"
+              ]
+            }
+          ],
+          [
+            "dt",
+            {
+              "$d": [
+                "offset",
+                "1979-05-27T07:32:00Z"
+              ]
+            }
+          ],
+          [
+            "l",
+            {
+              "$d": [
+                "localdt",
+                "1979-05-27T07:32:00"
+              ]
+            }
+          ],
+          [
+            "t",
+            {
+              "$d": [
+                "time",
+                "07:32:00"
+              ]
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "d = 1979-05-27\ndt = 1979-05-27T07:32:00Z\nl = 1979-05-27T07:32:00\nt = 07:32:00\n",
+        "value": {
+          "$t": [
+            [
+              "d",
+              {
+                "$d": [
+                  "date",
+                  "1979-05-27"
+                ]
+              }
+            ],
+            [
+              "dt",
+              {
+                "$d": [
+                  "offset",
+                  "1979-05-27T07:32:00Z"
+                ]
+              }
+            ],
+            [
+              "l",
+              {
+                "$d": [
+                  "localdt",
+                  "1979-05-27T07:32:00"
+                ]
+              }
+            ],
+            [
+              "t",
+              {
+                "$d": [
+                  "time",
+                  "07:32:00"
+                ]
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_inf_nan",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            {
+              "$f": "inf"
+            }
+          ],
+          [
+            "b",
+            {
+              "$f": "-inf"
+            }
+          ],
+          [
+            "c",
+            {
+              "$f": "nan"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "a = inf\nb = -inf\nc = nan\n",
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$f": "inf"
+              }
+            ],
+            [
+              "b",
+              {
+                "$f": "-inf"
+              }
+            ],
+            [
+              "c",
+              {
+                "$f": "nan"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_quoted_key",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "",
+            {
+              "$i": "2"
+            }
+          ],
+          [
+            "key with space",
+            {
+              "$i": "1"
+            }
+          ],
+          [
+            "normal",
+            {
+              "$i": "3"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "\"\" = 2\n\"key with space\" = 1\nnormal = 3\n",
+        "value": {
+          "$t": [
+            [
+              "",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "key with space",
+              {
+                "$i": "1"
+              }
+            ],
+            [
+              "normal",
+              {
+                "$i": "3"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "toml_enc_empty",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": []
+      },
+      "expect": {
+        "encoding": "",
+        "value": {
+          "$t": []
+        }
+      }
+    },
+    {
+      "id": "toml_enc_bytes_err",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$b": "01"
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_ROOT",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "toml_enc_root_err",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$i": "1"
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_ROOT",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "toml_enc_bad_datetime",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "d",
+            {
+              "$d": [
+                "offset",
+                "not-a-date"
+              ]
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DATETIME",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "toml_enc_depth_err",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            {
+              "$t": [
+                [
+                  "b",
+                  {
+                    "$t": [
+                      [
+                        "c",
+                        {
+                          "$i": "1"
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_DEPTH",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "toml_enc_str_escapes",
+      "format": "toml",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "s",
+            "a\"b\\c\nd\u0007\u001f"
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "s = \"a\\\"b\\\\c\\nd\\u0007\\u001f\"\n",
+        "value": {
+          "$t": [
+            [
+              "s",
+              "a\"b\\c\nd\u0007\u001f"
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_dec_nil_bool",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "93c0c2c3",
+      "expect": {
+        "value": [
+          null,
+          false,
+          true
+        ],
+        "encoding": "93c0c2c3"
+      }
+    },
+    {
+      "id": "mp_dec_fixint",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "95017f80ffe0",
+      "expect": {
+        "value": [
+          {
+            "$i": "1"
+          },
+          {
+            "$i": "127"
+          },
+          {
+            "$t": []
+          },
+          {
+            "$i": "-1"
+          },
+          {
+            "$i": "-32"
+          }
+        ],
+        "encoding": "95017f80ffe0"
+      }
+    },
+    {
+      "id": "mp_dec_u8_u16",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "93cccc8ccd01fbd0",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_UNEXPECTED",
+          "offset": 7
+        }
+      }
+    },
+    {
+      "id": "mp_dec_u32",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "ceffffffff",
+      "expect": {
+        "value": {
+          "$i": "4294967295"
+        },
+        "encoding": "ceffffffff"
+      }
+    },
+    {
+      "id": "mp_dec_u64max",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "cfffffffffffffffff",
+      "expect": {
+        "value": {
+          "$u": "18446744073709551615"
+        },
+        "encoding": "cfffffffffffffffff"
+      }
+    },
+    {
+      "id": "mp_dec_i8_i16",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "92d0dfd1fffe",
+      "expect": {
+        "value": [
+          {
+            "$i": "-33"
+          },
+          {
+            "$i": "-2"
+          }
+        ],
+        "encoding": "92d0dffe"
+      }
+    },
+    {
+      "id": "mp_dec_i32_i64",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "92d2ffffffefd3ffffffffffffffff",
+      "expect": {
+        "value": [
+          {
+            "$i": "-17"
+          },
+          {
+            "$i": "-1"
+          }
+        ],
+        "encoding": "92efff"
+      }
+    },
+    {
+      "id": "mp_dec_i64min",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "d38000000000000000",
+      "expect": {
+        "value": {
+          "$i": "-9223372036854775808"
+        },
+        "encoding": "d38000000000000000"
+      }
+    },
+    {
+      "id": "mp_dec_float32",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "ca3fc00000",
+      "expect": {
+        "value": {
+          "$f": "1.5"
+        },
+        "encoding": "cb3ff8000000000000"
+      }
+    },
+    {
+      "id": "mp_dec_float64",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "cb3ff0000000000000",
+      "expect": {
+        "value": {
+          "$f": "1.0"
+        },
+        "encoding": "cb3ff0000000000000"
+      }
+    },
+    {
+      "id": "mp_dec_fixstr",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "a368656c",
+      "expect": {
+        "value": "hel",
+        "encoding": "a368656c"
+      }
+    },
+    {
+      "id": "mp_dec_str16",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "da000568656c6c6f",
+      "expect": {
+        "value": "hello",
+        "encoding": "a568656c6c6f"
+      }
+    },
+    {
+      "id": "mp_dec_bin",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "c403a1a2a3",
+      "expect": {
+        "value": {
+          "$b": "a1a2a3"
+        },
+        "encoding": "c403a1a2a3"
+      }
+    },
+    {
+      "id": "mp_dec_fixarray",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "93010203",
+      "expect": {
+        "value": [
+          {
+            "$i": "1"
+          },
+          {
+            "$i": "2"
+          },
+          {
+            "$i": "3"
+          }
+        ],
+        "encoding": "93010203"
+      }
+    },
+    {
+      "id": "mp_dec_fixmap",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "82a16101a2626202",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "1"
+              }
+            ],
+            [
+              "bb",
+              {
+                "$i": "2"
+              }
+            ]
+          ]
+        },
+        "encoding": "82a16101a2626202"
+      }
+    },
+    {
+      "id": "mp_dec_ts32",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "d6ff00000000",
+      "expect": {
+        "value": {
+          "$d": [
+            "offset",
+            "1970-01-01T00:00:00Z"
+          ]
+        },
+        "encoding": "d6ff00000000"
+      }
+    },
+    {
+      "id": "mp_dec_ts64",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "d7ff7735940000000000",
+      "expect": {
+        "value": {
+          "$d": [
+            "offset",
+            "1970-01-01T00:00:00.5Z"
+          ]
+        },
+        "encoding": "d7ff7735940000000000"
+      }
+    },
+    {
+      "id": "mp_dec_ts96",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "c70cff32f2d7ff0000000225c17d04",
+      "expect": {
+        "value": {
+          "$d": [
+            "offset",
+            "2262-04-11T23:47:16.854775807Z"
+          ]
+        },
+        "encoding": "d7ffcbcb5ffe25c17d04"
+      }
+    },
+    {
+      "id": "mp_dec_truncated",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "a36868",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_TRUNCATED",
+          "offset": 3
+        }
+      }
+    },
+    {
+      "id": "mp_dec_unexpected_c1",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "c1",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_UNEXPECTED",
+          "offset": 0
+        }
+      }
+    },
+    {
+      "id": "mp_dec_ext_unknown",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "c70205a1a2",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_EXT",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "mp_dec_utf8_invalid",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "a2c3c3",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_UTF8",
+          "offset": 1
+        }
+      }
+    },
+    {
+      "id": "mp_dec_trailing",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "0102",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_TRAILING",
+          "offset": 1
+        }
+      }
+    },
+    {
+      "id": "mp_dec_depth_ok",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "91919101",
+      "options": {
+        "depth": 3
+      },
+      "expect": {
+        "value": [
+          [
+            [
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        ],
+        "encoding": "91919101"
+      }
+    },
+    {
+      "id": "mp_dec_depth_exceeded",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "91919101",
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_DEPTH",
+          "offset": 3
+        }
+      }
+    },
+    {
+      "id": "mp_dec_map_dup_key",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "82a16101a16102",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_DUPLICATE",
+          "offset": 7
+        }
+      }
+    },
+    {
+      "id": "mp_dec_intkey_unexpected",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "810101",
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_UNEXPECTED",
+          "offset": 2
+        }
+      }
+    },
+    {
+      "id": "mp_enc_scalars",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        null,
+        true,
+        false,
+        {
+          "$i": "127"
+        },
+        {
+          "$i": "-32"
+        },
+        {
+          "$i": "200"
+        },
+        {
+          "$i": "-33"
+        }
+      ],
+      "expect": {
+        "encoding": "97c0c3c27fe0ccc8d0df",
+        "value": [
+          null,
+          true,
+          false,
+          {
+            "$i": "127"
+          },
+          {
+            "$i": "-32"
+          },
+          {
+            "$i": "200"
+          },
+          {
+            "$i": "-33"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mp_enc_int_families",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        {
+          "$i": "255"
+        },
+        {
+          "$i": "256"
+        },
+        {
+          "$i": "65535"
+        },
+        {
+          "$i": "65536"
+        },
+        {
+          "$i": "-128"
+        },
+        {
+          "$i": "-32768"
+        },
+        {
+          "$i": "-2147483648"
+        },
+        {
+          "$i": "-9223372036854775808"
+        }
+      ],
+      "expect": {
+        "encoding": "98ccffcd0100cdffffce00010000d080d18000d280000000d38000000000000000",
+        "value": [
+          {
+            "$i": "255"
+          },
+          {
+            "$i": "256"
+          },
+          {
+            "$i": "65535"
+          },
+          {
+            "$i": "65536"
+          },
+          {
+            "$i": "-128"
+          },
+          {
+            "$i": "-32768"
+          },
+          {
+            "$i": "-2147483648"
+          },
+          {
+            "$i": "-9223372036854775808"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mp_enc_uint_families",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        {
+          "$u": "18446744073709551615"
+        },
+        {
+          "$u": "4294967296"
+        }
+      ],
+      "expect": {
+        "encoding": "92cfffffffffffffffffcf0000000100000000",
+        "value": [
+          {
+            "$u": "18446744073709551615"
+          },
+          {
+            "$i": "4294967296"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mp_enc_float",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        {
+          "$f": "1.0"
+        },
+        {
+          "$f": "-0.5"
+        },
+        {
+          "$f": "inf"
+        },
+        {
+          "$f": "nan"
+        }
+      ],
+      "expect": {
+        "encoding": "94cb3ff0000000000000cbbfe0000000000000cb7ff0000000000000cb7ff8000000000000",
+        "value": [
+          {
+            "$f": "1.0"
+          },
+          {
+            "$f": "-0.5"
+          },
+          {
+            "$f": "inf"
+          },
+          {
+            "$f": "nan"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mp_enc_str",
+      "format": "msgpack",
+      "op": "encode",
+      "value": "hello",
+      "expect": {
+        "encoding": "a568656c6c6f",
+        "value": "hello"
+      }
+    },
+    {
+      "id": "mp_enc_str_unicode",
+      "format": "msgpack",
+      "op": "encode",
+      "value": "café",
+      "expect": {
+        "encoding": "a5636166c3a9",
+        "value": "café"
+      }
+    },
+    {
+      "id": "mp_enc_bin",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$b": "0001ff"
+      },
+      "expect": {
+        "encoding": "c4030001ff",
+        "value": {
+          "$b": "0001ff"
+        }
+      }
+    },
+    {
+      "id": "mp_enc_arr_map",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            [
+              {
+                "$i": "1"
+              }
+            ]
+          ],
+          [
+            "m",
+            {
+              "$t": [
+                [
+                  "b",
+                  {
+                    "$i": "2"
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "82a1619101a16d81a16202",
+        "value": {
+          "$t": [
+            [
+              "a",
+              [
+                {
+                  "$i": "1"
+                }
+              ]
+            ],
+            [
+              "m",
+              {
+                "$t": [
+                  [
+                    "b",
+                    {
+                      "$i": "2"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_sorted_keys",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "a",
+            {
+              "$i": "2"
+            }
+          ],
+          [
+            "z",
+            {
+              "$i": "1"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "82a16102a17a01",
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "z",
+              {
+                "$i": "1"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_ts32",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "1970-01-01T00:00:00Z"
+        ]
+      },
+      "expect": {
+        "encoding": "d6ff00000000",
+        "value": {
+          "$d": [
+            "offset",
+            "1970-01-01T00:00:00Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_ts64",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "2010-03-14T02:31:30Z"
+        ]
+      },
+      "expect": {
+        "encoding": "d6ff4b9c4a82",
+        "value": {
+          "$d": [
+            "offset",
+            "2010-03-14T02:31:30Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_ts96",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "2262-04-11T23:47:16.854775807Z"
+        ]
+      },
+      "expect": {
+        "encoding": "d7ffcbcb5ffe25c17d04",
+        "value": {
+          "$d": [
+            "offset",
+            "2262-04-11T23:47:16.854775807Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_ts_neg",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "1969-12-31T23:59:59Z"
+        ]
+      },
+      "expect": {
+        "encoding": "c70cff00000000ffffffffffffffff",
+        "value": {
+          "$d": [
+            "offset",
+            "1969-12-31T23:59:59Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_datetime_local_err",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "date",
+          "1979-05-27"
+        ]
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_DATETIME",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "mp_enc_datetime_bad_err",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "garbage"
+        ]
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_DATETIME",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "mp_enc_depth_err",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        [
+          [
+            {
+              "$i": "1"
+            }
+          ]
+        ]
+      ],
+      "options": {
+        "depth": 2
+      },
+      "expect": {
+        "error": {
+          "code": "SERDE_MP_DEPTH",
+          "offset": null
+        }
+      }
+    },
+    {
+      "id": "mp_enc_roundtrip_toml_ts",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$d": [
+          "offset",
+          "1979-05-27T07:32:00Z"
+        ]
+      },
+      "expect": {
+        "encoding": "d6ff11ae5770",
+        "value": {
+          "$d": [
+            "offset",
+            "1979-05-27T07:32:00Z"
+          ]
+        }
+      }
+    },
+    {
+      "id": "x_json_canonical_ws",
+      "format": "json",
+      "op": "decode",
+      "input": "{ \"b\" : [ 1, 2.50 ] }",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "b",
+              [
+                {
+                  "$i": "1"
+                },
+                {
+                  "$f": "2.5"
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "{\"b\":[1,2.5]}"
+      }
+    },
+    {
+      "id": "x_toml_canonical_ws",
+      "format": "toml",
+      "op": "decode",
+      "input": "b   =   [ 1 , 2.50 ]\n",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "b",
+              [
+                {
+                  "$i": "1"
+                },
+                {
+                  "$f": "2.5"
+                }
+              ]
+            ]
+          ]
+        },
+        "encoding": "b = [1, 2.5]\n"
+      }
+    },
+    {
+      "id": "x_mp_canonical",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "82a1629201a178a16181a16ec0",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$t": [
+                  [
+                    "n",
+                    null
+                  ]
+                ]
+              }
+            ],
+            [
+              "b",
+              [
+                {
+                  "$i": "1"
+                },
+                "x"
+              ]
+            ]
+          ]
+        },
+        "encoding": "82a16181a16ec0a1629201a178"
+      }
+    }
+  ]
+}

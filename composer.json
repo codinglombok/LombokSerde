@@ -1,0 +1,24 @@
+{
+    "name": "codinglombok/lombokserde",
+    "description": "JSON, TOML and MessagePack serialization/deserialization with byte-identical results across PHP, Rust, TypeScript, Python and Go. Zero dependencies.",
+    "type": "library",
+    "license": "Apache-2.0",
+    "keywords": ["json", "toml", "msgpack", "messagepack", "serialization", "deserialization", "deterministic", "lombok-ecosystem"],
+    "homepage": "https://github.com/codinglombok/LombokSerde",
+    "authors": [{ "name": "codinglombok" }],
+    "require": {
+        "php": ">=8.1"
+    },
+    "support": {
+        "issues": "https://github.com/codinglombok/LombokSerde/issues",
+        "source": "https://github.com/codinglombok/LombokSerde"
+    },
+    "autoload": {
+        "psr-4": {
+            "CodingLombok\\LombokSerde\\": "php/src/"
+        }
+    },
+    "scripts": {
+        "test": "php php/tests/run.php"
+    }
+}
