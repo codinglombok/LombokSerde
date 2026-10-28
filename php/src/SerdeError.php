@@ -2,17 +2,28 @@
 
 declare(strict_types=1);
 
-namespace LombokSerde;
+namespace CodingLombok\LombokSerde;
 
-class SerdeError extends \RuntimeException
+/**
+ * The shared error type: `[CODE] message` and, with a position,
+ * `[CODE] message (at byte N)`.
+ *
+ * The code is exposed through code() because \Exception already reserves a
+ * $code property.
+ */
+final class SerdeError extends \RuntimeException
 {
     public function __construct(
-        public readonly SerdeErrorCode $code,
+        private readonly string $errorCode,
         string $message,
-        public readonly ?int $line = null,
-        public readonly ?int $column = null,
+        public readonly ?int $offset = null,
     ) {
-        $loc = ($line !== null && $column !== null) ? " at line {$line}, col {$column}" : '';
-        parent::__construct("{$code->value}: {$message}{$loc}");
+        $loc = $offset !== null ? " (at byte {$offset})" : '';
+        parent::__construct("[{$errorCode}] {$message}{$loc}");
+    }
+
+    public function code(): string
+    {
+        return $this->errorCode;
     }
 }
