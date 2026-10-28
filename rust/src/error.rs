@@ -1,74 +1,44 @@
-//! Error types for LombokSerde.
+//! Error type shared by every LombokSerde port.
+//!
+//! The wire format of an error is `[CODE] message` and, when a byte offset
+//! applies, `[CODE] message (at byte N)`. Error codes are stable strings
+//! shared across all language ports (see the SPEC).
 
-use core::fmt;
+use std::fmt;
 
-/// Error type for serialization/deserialization operations.
-#[derive(Debug, Clone, PartialEq)]
-pub enum SerdeError {
-    /// JSON/TOML/MsgPack syntax error.
-    SyntaxError {
-        message: &'static str,
-        line: usize,
-        column: usize,
-    },
-    /// Unexpected end of input.
-    UnexpectedEof,
-    /// Type mismatch during deserialization.
-    TypeMismatch {
-        expected: &'static str,
-        found: &'static str,
-    },
-    /// Missing required field.
-    MissingField(&'static str),
-    /// Unknown field encountered.
-    UnknownField,
-    /// Value out of range.
-    OutOfRange(&'static str),
-    /// Nesting depth exceeded.
-    DepthExceeded(usize),
-    /// Invalid Unicode escape or encoding.
-    InvalidUnicode,
-    /// Duplicate key in map/table.
-    DuplicateKey,
-    /// Feature not supported.
-    Unsupported(&'static str),
-    /// Generic error with message.
-    Custom(#[cfg(feature = "std")] String, #[cfg(not(feature = "std"))] &'static str),
+/// A LombokSerde error. `code` is one of the stable `SERDE_*` codes listed
+/// in the SPEC; `offset` is the byte offset into the input when one applies.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SerdeError {
+    /// Stable error code, e.g. `SERDE_JSON_SYNTAX`.
+    pub code: &'static str,
+    /// Human-readable detail. The `[CODE]` prefix is never part of it.
+    pub message: String,
+    /// Byte offset into the input, when a position applies.
+    pub offset: Option<usize>,
+}
+
+impl SerdeError {
+    pub fn new(code: &'static str, message: impl Into<String>, offset: Option<usize>) -> Self {
+        SerdeError {
+            code,
+            message: message.into(),
+            offset,
+        }
+    }
+
+    pub fn syntax(code: &'static str, offset: usize, detail: &'static str) -> Self {
+        SerdeError::new(code, detail, Some(offset))
+    }
 }
 
 impl fmt::Display for SerdeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::SyntaxError { message, line, column } => {
-                write!(f, "syntax error at {}:{}: {}", line, column, message)
-            }
-            Self::UnexpectedEof => write!(f, "unexpected end of input"),
-            Self::TypeMismatch { expected, found } => {
-                write!(f, "type mismatch: expected {}, found {}", expected, found)
-            }
-            Self::MissingField(name) => write!(f, "missing field: {}", name),
-            Self::UnknownField => write!(f, "unknown field"),
-            Self::OutOfRange(msg) => write!(f, "value out of range: {}", msg),
-            Self::DepthExceeded(max) => write!(f, "nesting depth exceeded (max {})", max),
-            Self::InvalidUnicode => write!(f, "invalid unicode"),
-            Self::DuplicateKey => write!(f, "duplicate key"),
-            Self::Unsupported(msg) => write!(f, "unsupported: {}", msg),
-            Self::Custom(msg) => write!(f, "{}", msg),
+        match self.offset {
+            Some(n) => write!(f, "[{}] {} (at byte {})", self.code, self.message, n),
+            None => write!(f, "[{}] {}", self.code, self.message),
         }
     }
 }
 
-#[cfg(feature = "std")]
 impl std::error::Error for SerdeError {}
-
-impl SerdeError {
-    /// Create a syntax error with position information.
-    pub fn syntax(message: &'static str, line: usize, column: usize) -> Self {
-        Self::SyntaxError { message, line, column }
-    }
-
-    /// Create a syntax error at position 0:0 (for binary formats).
-    pub fn syntax_at_zero(message: &'static str) -> Self {
-        Self::SyntaxError { message, line: 0, column: 0 }
-    }
-}

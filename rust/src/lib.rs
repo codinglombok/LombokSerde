@@ -1,31 +1,35 @@
-//! LombokSerde — zero-dependency serialization library.
+//! LombokSerde — zero-dependency serialization library with byte-identical
+//! behavior across languages: JSON (RFC 8259), TOML (v1.0), MessagePack.
 //!
-//! Supports JSON (RFC 8259), TOML (v1.0), and MessagePack.
+//! The Rust crate is the reference implementation of the cross-language
+//! contract; every port must pass the shared deterministic vectors in
+//! `vectors/lombokserde-vectors-v1.json` bit-identically. See
+//! `docs/SPEC_LombokSerde_v0.1.0.md` for the normative specification.
 //!
-//! # Features
-//! - `json` (default) — JSON parser/serializer
-//! - `toml` — TOML parser/serializer (requires std)
-//! - `msgpack` (default) — MessagePack encoder/decoder
-//! - `std` (default) — std library support
+//! # Quick start
+//! ```
+//! use lombokserde::{json_decode, json_encode, JsonOptions, Value};
+//!
+//! let v = json_decode(br#"{"b":1,"a":2}"#, &JsonOptions::default()).unwrap();
+//! assert_eq!(
+//!     json_encode(&v, &JsonOptions::default()).unwrap(),
+//!     br#"{"a":2,"b":1}"#.to_vec()
+//! );
+//! assert_eq!(v.get("a"), Some(&Value::Int(2)));
+//! ```
 
-#![cfg_attr(not(feature = "std"), no_std)]
+mod error;
+mod float;
+mod json;
+mod msgpack;
+mod toml;
+mod value;
 
-extern crate alloc;
-
-pub mod error;
-pub mod value;
-pub mod traits;
-
-#[cfg(feature = "json")]
-pub mod json;
-
-#[cfg(feature = "toml")]
-pub mod toml;
-
-#[cfg(feature = "msgpack")]
-pub mod msgpack;
-
-// Re-exports
 pub use error::SerdeError;
-pub use value::{Value, DateTime};
-pub use traits::{Serialize, Deserialize};
+pub use json::{json_decode, json_encode, JsonOptions};
+pub use msgpack::{msgpack_decode, msgpack_encode, MsgPackOptions};
+pub use toml::{toml_decode, toml_encode, TomlOptions};
+pub use value::{Datetime, DatetimeKind, Value};
+
+/// Default maximum container nesting depth for every format and port.
+pub const DEFAULT_DEPTH_LIMIT: u32 = 128;

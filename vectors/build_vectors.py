@@ -978,8 +978,10 @@ class TomlParser:
             text = b[digits_start + 2:self.i].decode("ascii").replace("_", "")
             if text == "":
                 self.fail()
-            n = int(text, base)
-            return ("int", sign * n)
+            n = sign * int(text, base)
+            if n < -2**63 or n > 2**63 - 1:
+                self.fail()
+            return ("int", n)
         is_float = False
         if self.i < len(b) and b[self.i] == 0x2E:  # .
             is_float = True
@@ -1001,7 +1003,8 @@ class TomlParser:
             raw_digits = text.lstrip("+-")
             if len(raw_digits) > 1 and raw_digits[0] == "0":
                 self.fail()
-            n = int(text)
+            signed = ("-" if sign < 0 else "") + text
+            n = int(signed)
             if n < -2**63 or n > 2**63 - 1:
                 self.fail()
             return ("int", n)

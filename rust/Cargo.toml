@@ -2,16 +2,14 @@
 name = "lombokserde"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.70"
 authors = ["CodingLombok <codinglombok@gmail.com>"]
-description = "Zero-dependency serialization library: JSON, TOML, MessagePack"
+description = "Zero-dependency JSON, TOML and MessagePack serialization with byte-identical results across languages"
 license = "Apache-2.0"
 repository = "https://github.com/codinglombok/LombokSerde"
-
-[features]
-default = ["std", "json", "msgpack"]
-std = []
-json = []
-toml = ["std"]
-msgpack = []
+keywords = ["json", "toml", "msgpack", "serialization", "serde"]
+categories = ["encoding"]
 
 [dependencies]
+
+[dev-dependencies]
