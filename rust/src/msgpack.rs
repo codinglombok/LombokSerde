@@ -134,11 +134,11 @@ impl<'a> MpParser<'a> {
                 self.read_str(n)
             }
             0xDC | 0xDD => {
-                let n = self.read_len(m - 0xDC, 2)?;
+                let n = self.read_len(m - 0xDB, 2)?;
                 self.read_array(n, depth)
             }
             0xDE | 0xDF => {
-                let n = self.read_len(m - 0xDE, 2)?;
+                let n = self.read_len(m - 0xDD, 2)?;
                 self.read_map(n, depth)
             }
         }

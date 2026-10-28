@@ -243,11 +243,13 @@ impl<'a> Parser<'a> {
                     b'u' => {
                         let cp = self.parse_hex4()?;
                         if (0xD800..=0xDBFF).contains(&cp) {
-                            if self.i + 3 < self.b.len()
-                                && self.b[self.i + 1] == b'\\'
-                                && self.b[self.i + 2] == b'u'
+                            // after parse_hex4 the cursor sits on the next
+                            // char: a trailing pair escape starts here
+                            if self.i + 2 < self.b.len()
+                                && self.b[self.i] == b'\\'
+                                && self.b[self.i + 1] == b'u'
                             {
-                                self.i += 2;
+                                self.i += 1; // land on the 'u' of the low escape
                                 let lo = self.parse_hex4()?;
                                 if (0xDC00..=0xDFFF).contains(&lo) {
                                     let c = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00);

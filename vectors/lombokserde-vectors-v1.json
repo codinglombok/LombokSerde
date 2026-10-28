@@ -267,6 +267,38 @@
       "op": "decode",
       "input": "\"\\ud83d\\ude00\"",
       "expect": {
+        "value": "😀",
+        "encoding": "\"😀\""
+      }
+    },
+    {
+      "id": "json_dec_str_surrogate_emoji_tails",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\ud83d\\ude00\\ud83d\\ude0a\"",
+      "expect": {
+        "value": "😀😊",
+        "encoding": "\"😀😊\""
+      }
+    },
+    {
+      "id": "json_dec_str_surrogate_bad_low",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\ud83d\\u0041\"",
+      "expect": {
+        "error": {
+          "code": "SERDE_JSON_SYNTAX",
+          "offset": 13
+        }
+      }
+    },
+    {
+      "id": "json_dec_str_surrogate_nonescape_after_high",
+      "format": "json",
+      "op": "decode",
+      "input": "\"\\ud83dx\"",
+      "expect": {
         "error": {
           "code": "SERDE_JSON_SYNTAX",
           "offset": 7
@@ -1789,6 +1821,54 @@
       }
     },
     {
+      "id": "toml_dec_syntax_sign_hex",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = +0x10\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 6
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_hash_key",
+      "format": "toml",
+      "op": "decode",
+      "input": "[\"#x\"]\ny = 1\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 5
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_dotted_under_aot",
+      "format": "toml",
+      "op": "decode",
+      "input": "[[a]]\nx.y = 1\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 13
+        }
+      }
+    },
+    {
+      "id": "toml_dec_syntax_sign_bin",
+      "format": "toml",
+      "op": "decode",
+      "input": "x = -0b11\n",
+      "expect": {
+        "error": {
+          "code": "SERDE_TOML_SYNTAX",
+          "offset": 6
+        }
+      }
+    },
+    {
       "id": "toml_dec_syntax_bad_datetime",
       "format": "toml",
       "op": "decode",
@@ -2717,6 +2797,68 @@
       }
     },
     {
+      "id": "mp_dec_array16",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "dc0003010203",
+      "expect": {
+        "value": [
+          {
+            "$i": "1"
+          },
+          {
+            "$i": "2"
+          },
+          {
+            "$i": "3"
+          }
+        ],
+        "encoding": "93010203"
+      }
+    },
+    {
+      "id": "mp_dec_map16",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "de0002a16101a16202",
+      "expect": {
+        "value": {
+          "$t": [
+            [
+              "a",
+              {
+                "$i": "1"
+              }
+            ],
+            [
+              "b",
+              {
+                "$i": "2"
+              }
+            ]
+          ]
+        },
+        "encoding": "82a16101a16202"
+      }
+    },
+    {
+      "id": "mp_dec_array32",
+      "format": "msgpack",
+      "op": "decode",
+      "input_hex": "dd000000020102",
+      "expect": {
+        "value": [
+          {
+            "$i": "1"
+          },
+          {
+            "$i": "2"
+          }
+        ],
+        "encoding": "920102"
+      }
+    },
+    {
       "id": "mp_dec_fixmap",
       "format": "msgpack",
       "op": "decode",
@@ -3157,6 +3299,418 @@
               }
             ]
           ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_array16",
+      "format": "msgpack",
+      "op": "encode",
+      "value": [
+        {
+          "$i": "0"
+        },
+        {
+          "$i": "1"
+        },
+        {
+          "$i": "2"
+        },
+        {
+          "$i": "3"
+        },
+        {
+          "$i": "4"
+        },
+        {
+          "$i": "5"
+        },
+        {
+          "$i": "6"
+        },
+        {
+          "$i": "7"
+        },
+        {
+          "$i": "8"
+        },
+        {
+          "$i": "9"
+        },
+        {
+          "$i": "10"
+        },
+        {
+          "$i": "11"
+        },
+        {
+          "$i": "12"
+        },
+        {
+          "$i": "13"
+        },
+        {
+          "$i": "14"
+        },
+        {
+          "$i": "15"
+        },
+        {
+          "$i": "16"
+        },
+        {
+          "$i": "17"
+        },
+        {
+          "$i": "18"
+        },
+        {
+          "$i": "19"
+        }
+      ],
+      "expect": {
+        "encoding": "dc0014000102030405060708090a0b0c0d0e0f10111213",
+        "value": [
+          {
+            "$i": "0"
+          },
+          {
+            "$i": "1"
+          },
+          {
+            "$i": "2"
+          },
+          {
+            "$i": "3"
+          },
+          {
+            "$i": "4"
+          },
+          {
+            "$i": "5"
+          },
+          {
+            "$i": "6"
+          },
+          {
+            "$i": "7"
+          },
+          {
+            "$i": "8"
+          },
+          {
+            "$i": "9"
+          },
+          {
+            "$i": "10"
+          },
+          {
+            "$i": "11"
+          },
+          {
+            "$i": "12"
+          },
+          {
+            "$i": "13"
+          },
+          {
+            "$i": "14"
+          },
+          {
+            "$i": "15"
+          },
+          {
+            "$i": "16"
+          },
+          {
+            "$i": "17"
+          },
+          {
+            "$i": "18"
+          },
+          {
+            "$i": "19"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mp_enc_map16",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$t": [
+          [
+            "k00",
+            {
+              "$i": "0"
+            }
+          ],
+          [
+            "k01",
+            {
+              "$i": "1"
+            }
+          ],
+          [
+            "k02",
+            {
+              "$i": "2"
+            }
+          ],
+          [
+            "k03",
+            {
+              "$i": "3"
+            }
+          ],
+          [
+            "k04",
+            {
+              "$i": "4"
+            }
+          ],
+          [
+            "k05",
+            {
+              "$i": "5"
+            }
+          ],
+          [
+            "k06",
+            {
+              "$i": "6"
+            }
+          ],
+          [
+            "k07",
+            {
+              "$i": "7"
+            }
+          ],
+          [
+            "k08",
+            {
+              "$i": "8"
+            }
+          ],
+          [
+            "k09",
+            {
+              "$i": "9"
+            }
+          ],
+          [
+            "k10",
+            {
+              "$i": "10"
+            }
+          ],
+          [
+            "k11",
+            {
+              "$i": "11"
+            }
+          ],
+          [
+            "k12",
+            {
+              "$i": "12"
+            }
+          ],
+          [
+            "k13",
+            {
+              "$i": "13"
+            }
+          ],
+          [
+            "k14",
+            {
+              "$i": "14"
+            }
+          ],
+          [
+            "k15",
+            {
+              "$i": "15"
+            }
+          ],
+          [
+            "k16",
+            {
+              "$i": "16"
+            }
+          ],
+          [
+            "k17",
+            {
+              "$i": "17"
+            }
+          ],
+          [
+            "k18",
+            {
+              "$i": "18"
+            }
+          ],
+          [
+            "k19",
+            {
+              "$i": "19"
+            }
+          ]
+        ]
+      },
+      "expect": {
+        "encoding": "de0014a36b303000a36b303101a36b303202a36b303303a36b303404a36b303505a36b303606a36b303707a36b303808a36b303909a36b31300aa36b31310ba36b31320ca36b31330da36b31340ea36b31350fa36b313610a36b313711a36b313812a36b313913",
+        "value": {
+          "$t": [
+            [
+              "k00",
+              {
+                "$i": "0"
+              }
+            ],
+            [
+              "k01",
+              {
+                "$i": "1"
+              }
+            ],
+            [
+              "k02",
+              {
+                "$i": "2"
+              }
+            ],
+            [
+              "k03",
+              {
+                "$i": "3"
+              }
+            ],
+            [
+              "k04",
+              {
+                "$i": "4"
+              }
+            ],
+            [
+              "k05",
+              {
+                "$i": "5"
+              }
+            ],
+            [
+              "k06",
+              {
+                "$i": "6"
+              }
+            ],
+            [
+              "k07",
+              {
+                "$i": "7"
+              }
+            ],
+            [
+              "k08",
+              {
+                "$i": "8"
+              }
+            ],
+            [
+              "k09",
+              {
+                "$i": "9"
+              }
+            ],
+            [
+              "k10",
+              {
+                "$i": "10"
+              }
+            ],
+            [
+              "k11",
+              {
+                "$i": "11"
+              }
+            ],
+            [
+              "k12",
+              {
+                "$i": "12"
+              }
+            ],
+            [
+              "k13",
+              {
+                "$i": "13"
+              }
+            ],
+            [
+              "k14",
+              {
+                "$i": "14"
+              }
+            ],
+            [
+              "k15",
+              {
+                "$i": "15"
+              }
+            ],
+            [
+              "k16",
+              {
+                "$i": "16"
+              }
+            ],
+            [
+              "k17",
+              {
+                "$i": "17"
+              }
+            ],
+            [
+              "k18",
+              {
+                "$i": "18"
+              }
+            ],
+            [
+              "k19",
+              {
+                "$i": "19"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "mp_enc_str16",
+      "format": "msgpack",
+      "op": "encode",
+      "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "expect": {
+        "encoding": "da012c787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878",
+        "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    },
+    {
+      "id": "mp_enc_bin16",
+      "format": "msgpack",
+      "op": "encode",
+      "value": {
+        "$b": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+      },
+      "expect": {
+        "encoding": "c50200000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+        "value": {
+          "$b": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
         }
       }
     },

@@ -322,8 +322,8 @@ class JsonParser:
                 if e == 0x75:  # u
                     cp = self.parse_hex4()
                     if 0xD800 <= cp <= 0xDBFF:
-                        if self.i + 1 < len(b) and b[self.i + 1] == 0x5C and self.i + 2 < len(b) and b[self.i + 2] == 0x75:
-                            self.i += 2
+                        if self.i + 1 < len(b) and b[self.i] == 0x5C and b[self.i + 1] == 0x75:
+                            self.i += 1  # land on the 'u' of the low escape
                             lo = self.parse_hex4()
                             if 0xDC00 <= lo <= 0xDFFF:
                                 cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00)
@@ -654,15 +654,24 @@ class TomlParser:
         if c is None:
             self.fail()
         if c == 0x22:
-            return self.parse_basic_string()
+            k = self.parse_basic_string()
+            if k.startswith("#"):
+                self.fail()
+            return k
         if c == 0x27:
-            return self.parse_literal_string()
+            k = self.parse_literal_string()
+            if k.startswith("#"):
+                self.fail()
+            return k
         s = self.i
         while self.i < len(self.b) and chr(self.b[self.i]) in BARE_KEY:
             self.i += 1
         if self.i == s:
             self.fail()
-        return self.b[s:self.i].decode("utf-8")
+        key = self.b[s:self.i].decode("utf-8")
+        if key.startswith("#"):
+            self.fail()  # '#'-prefixed keys are reserved (AoT element markers)
+        return key
 
     # --- keyval ---------------------------------------------------------------
     def parse_keyval(self):
@@ -675,6 +684,8 @@ class TomlParser:
         v = self.parse_value(len(self.cur) + len(keys) + 1)
         base = self.resolve(self.cur)
         inter = keys[:-1]
+        if inter and self.root.get(base, {}).get("state") == "aot":
+            self.fail()  # v1: dotted keys cannot extend AoT elements
         # dotted intermediates: create or descend; explicit tables reject extension
         for j in range(1, len(inter) + 1):
             sp = base + inter[:j]
@@ -683,6 +694,8 @@ class TomlParser:
                 self.root[sp] = {"state": "dotted", "pairs": {}, "elems": None}
             elif node["state"] == "explicit":
                 self.fail("SERDE_TOML_DUPLICATE")
+            elif node["state"] == "aot":
+                self.fail()  # v1: dotted keys cannot extend AoT elements
         parent_path = base + inter
         parent = self.root.get(parent_path)
         if parent is None:
@@ -946,9 +959,11 @@ class TomlParser:
             self.i = end
             return ("datetime", kind, raw)
         sign = 1
+        sign_used = False
         if b[self.i] in (0x2B, 0x2D):
             if b[self.i] == 0x2D:
                 sign = -1
+            sign_used = True
             self.i += 1
         word = None
         if b[self.i:self.i + 3] == b"inf":
@@ -973,6 +988,8 @@ class TomlParser:
         elif self.i < len(b) and b[self.i] == 0x62 and self.i - digits_start == 1 and b[digits_start] == 0x30:
             base = 2
         if base != 10:
+            if sign_used:
+                self.fail()  # TOML v1.0: signs are not allowed on hex/oct/bin
             self.i += 1
             self.read_digits_underscore(base)
             text = b[digits_start + 2:self.i].decode("ascii").replace("_", "")
@@ -1539,10 +1556,10 @@ class MpParser:
             n = self.read_len(m - 0xD9, 1)
             return ("str", self.read_str(n))
         if m == 0xDC or m == 0xDD:
-            n = self.read_len(m - 0xDC, 2)
+            n = self.read_len(m - 0xDB, 2)
             return self.read_array(n, depth)
         if m == 0xDE or m == 0xDF:
-            n = self.read_len(m - 0xDE, 2)
+            n = self.read_len(m - 0xDD, 2)
             return self.read_map(n, depth)
         raise SerdeErr("SERDE_MP_UNEXPECTED", self.i - 1)
 
@@ -1704,6 +1721,9 @@ def _cases():
     add("json_dec_str_simple", "json", "decode", '"hello"')
     add("json_dec_str_unicode", "json", "decode", '"caf\\u00e9 \\u4e2d\\u6587"')
     add("json_dec_str_surrogate_pair", "json", "decode", '"\\ud83d\\ude00"')
+    add("json_dec_str_surrogate_emoji_tails", "json", "decode", '"\\ud83d\\ude00\\ud83d\\ude0a"')
+    add("json_dec_str_surrogate_bad_low", "json", "decode", '"\\ud83d\\u0041"')
+    add("json_dec_str_surrogate_nonescape_after_high", "json", "decode", '"\\ud83dx"')
     add("json_dec_str_escapes", "json", "decode", '"a\\"b\\\\c\\nd\\te\\rf\\bg\\fh"')
     add("json_dec_str_control_esc", "json", "decode", '"\\u0001\\u001f"')
     add("json_dec_str_empty", "json", "decode", '""')
@@ -1780,6 +1800,10 @@ def _cases():
     add("toml_dec_dotted_then_header", "toml", "decode", "a.b = 1\n[a]\nx = 2\n")
     add("toml_dec_syntax_bad_value", "toml", "decode", "x = \n")
     add("toml_dec_syntax_leading_zero", "toml", "decode", "x = 01\n")
+    add("toml_dec_syntax_sign_hex", "toml", "decode", "x = +0x10\n")
+    add("toml_dec_syntax_hash_key", "toml", "decode", '["#x"]\ny = 1\n')
+    add("toml_dec_syntax_dotted_under_aot", "toml", "decode", "[[a]]\nx.y = 1\n")
+    add("toml_dec_syntax_sign_bin", "toml", "decode", "x = -0b11\n")
     add("toml_dec_syntax_bad_datetime", "toml", "decode", "d = 1979-13-27\n")
     add("toml_dec_syntax_unterminated", "toml", "decode", 's = "abc\n')
     add("toml_dec_utf8_invalid", "toml", "decode", b"x = '\xff'\n")
@@ -1818,6 +1842,9 @@ def _cases():
     add("mp_dec_str16", "msgpack", "decode", "da000568656c6c6f")
     add("mp_dec_bin", "msgpack", "decode", "c403a1a2a3")
     add("mp_dec_fixarray", "msgpack", "decode", "93010203")
+    add("mp_dec_array16", "msgpack", "decode", "dc0003010203")
+    add("mp_dec_map16", "msgpack", "decode", "de0002a16101a16202")
+    add("mp_dec_array32", "msgpack", "decode", "dd000000020102")
     add("mp_dec_fixmap", "msgpack", "decode", "82a16101a26262 02".replace(" ", ""))
     add("mp_dec_ts32", "msgpack", "decode", "d6ff00000000")
     add("mp_dec_ts64", "msgpack", "decode", "d7ff7735940000000000")
@@ -1841,6 +1868,10 @@ def _cases():
     add("mp_enc_str_unicode", "msgpack", "encode", {"value": ("str", "café")})
     add("mp_enc_bin", "msgpack", "encode", {"value": ("bytes", b"\x00\x01\xff")})
     add("mp_enc_arr_map", "msgpack", "encode", {"value": table([("a", ("array", [("int", 1)])), ("m", table([("b", ("int", 2))]))])})
+    add("mp_enc_array16", "msgpack", "encode", {"value": ("array", [("int", i) for i in range(20)])})
+    add("mp_enc_map16", "msgpack", "encode", {"value": table([(f"k{i:02d}", ("int", i)) for i in range(20)])})
+    add("mp_enc_str16", "msgpack", "encode", {"value": ("str", "x" * 300)})
+    add("mp_enc_bin16", "msgpack", "encode", {"value": ("bytes", bytes(range(256)) * 2)})
     add("mp_enc_sorted_keys", "msgpack", "encode", {"value": table([("z", ("int", 1)), ("a", ("int", 2))])})
     add("mp_enc_ts32", "msgpack", "encode", {"value": ("datetime", "offset", "1970-01-01T00:00:00Z")})
     add("mp_enc_ts64", "msgpack", "encode", {"value": ("datetime", "offset", "2010-03-14T02:31:30Z")})

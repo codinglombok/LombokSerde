@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ES2022",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "types": ["node"],
     "declaration": true,
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
     "outDir": "./dist/esm",
-    "rootDir": "./src",
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "rootDir": "./src"
   },
   "include": ["src/**/*.ts"]
 }

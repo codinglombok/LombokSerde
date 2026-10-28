@@ -349,8 +349,16 @@ impl<'a> TomlParser<'a> {
     fn parse_single_key(&mut self) -> Result<String, SerdeError> {
         match self.peek() {
             None => Err(self.fail("expected key")),
-            Some(0x22) => self.parse_basic_string(),
-            Some(0x27) => self.parse_literal_string(),
+            Some(0x22) => {
+                let k = self.parse_basic_string()?;
+                Self::check_reserved(&k, self.i)?;
+                Ok(k)
+            }
+            Some(0x27) => {
+                let k = self.parse_literal_string()?;
+                Self::check_reserved(&k, self.i)?;
+                Ok(k)
+            }
             Some(_) => {
                 let s = self.i;
                 while self.peek().is_some_and(is_bare_key_byte) {
@@ -362,6 +370,15 @@ impl<'a> TomlParser<'a> {
                 Ok(String::from_utf8_lossy(&self.b[s..self.i]).into_owned())
             }
         }
+    }
+
+    /// '#'-prefixed keys are reserved: they collide with the internal
+    /// array-of-tables element markers (fail-closed v1 restriction).
+    fn check_reserved(key: &str, at: usize) -> Result<(), SerdeError> {
+        if key.starts_with('#') {
+            return Err(err(E_SYNTAX, at, "keys starting with '#' are reserved"));
+        }
+        Ok(())
     }
 
     // --- keyval ---------------------------------------------------------------
@@ -377,6 +394,16 @@ impl<'a> TomlParser<'a> {
         let v = self.parse_value((self.cur.len() + keys.len() + 1) as u32)?;
         let base = self.resolve(&self.cur);
         let inter = keys[..keys.len().saturating_sub(1)].to_vec();
+        if !inter.is_empty()
+            && self.root.get(&base).map(|n| n.state) == Some(State::Aot)
+        {
+            // v1: dotted keys cannot extend array-of-tables elements
+            return Err(err(
+                E_SYNTAX,
+                self.i,
+                "dotted keys cannot extend array-of-tables elements",
+            ));
+        }
         // dotted intermediates: create or descend; explicit tables reject extension
         for j in 1..=inter.len() {
             let mut sp = base.clone();
@@ -408,19 +435,6 @@ impl<'a> TomlParser<'a> {
         };
         if self.root.contains_key(&leaf) {
             return Err(self.dup());
-        }
-        // the write target is the element pairs when the parent path ends at
-        // an AoT element marker, otherwise the node's own pairs
-        if is_pseudo(parent_path.last().map(|s| s.as_str()).unwrap_or("")) {
-            let mut aot_path = parent_path.clone();
-            let idx: usize = aot_path.pop().unwrap()[1..].parse().unwrap();
-            let node = self.root.get_mut(&aot_path).unwrap();
-            let elem = &mut node.elems.as_mut().unwrap()[idx];
-            if elem.pairs.contains_key(&last) {
-                return Err(self.dup());
-            }
-            elem.pairs.insert(last, v);
-            return Ok(());
         }
         if !self.root.contains_key(&parent_path) {
             self.root
@@ -770,10 +784,12 @@ impl<'a> TomlParser<'a> {
             Err(e) => return Err(e),
         }
         let mut sign = 1i64;
+        let mut sign_seen = false;
         if matches!(self.peek(), Some(0x2B) | Some(0x2D)) {
             if self.peek() == Some(0x2D) {
                 sign = -1;
             }
+            sign_seen = true;
             self.i += 1;
         }
         if self.b[self.i..].starts_with(b"inf") {
@@ -806,6 +822,9 @@ impl<'a> TomlParser<'a> {
             None
         };
         if let Some(base) = base {
+            if sign_seen {
+                return Err(self.fail("signs are not allowed on hex/oct/bin integers"));
+            }
             self.i += 1;
             self.read_digits(base)?;
             let text = String::from_utf8_lossy(&self.b[digits_start + 2..self.i]).replace('_', "");

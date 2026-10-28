@@ -1,31 +1,24 @@
-/**
- * Error codes for LombokSerde operations.
- */
-export enum SerdeErrorCode {
-  SyntaxError = 'SYNTAX_ERROR',
-  UnexpectedEof = 'UNEXPECTED_EOF',
-  TypeMismatch = 'TYPE_MISMATCH',
-  MissingField = 'MISSING_FIELD',
-  OutOfRange = 'OUT_OF_RANGE',
-  DepthExceeded = 'DEPTH_EXCEEDED',
-  InvalidUnicode = 'INVALID_UNICODE',
-  DuplicateKey = 'DUPLICATE_KEY',
-  Unsupported = 'UNSUPPORTED',
-}
-
-/**
- * Error class for serialization/deserialization failures.
- */
+/** Error type shared by every LombokSerde port (SPEC section 6). */
 export class SerdeError extends Error {
-  readonly code: SerdeErrorCode;
-  readonly line?: number;
-  readonly column?: number;
+  /** Stable error code, e.g. `SERDE_JSON_SYNTAX`. */
+  readonly code: string;
+  /** Byte offset into the input when a position applies. */
+  readonly offset: number | null;
 
-  constructor(code: SerdeErrorCode, message: string, line?: number, column?: number) {
-    super(message);
+  constructor(code: string, message: string, offset: number | null) {
+    super(
+      offset === null ? `[${code}] ${message}` : `[${code}] ${message} (at byte ${offset})`,
+    );
     this.name = 'SerdeError';
     this.code = code;
-    this.line = line;
-    this.column = column;
+    this.offset = offset;
   }
+}
+
+export function syntaxErr(
+  code: string,
+  offset: number,
+  detail: string,
+): SerdeError {
+  return new SerdeError(code, detail, offset);
 }
