@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lombokserde"
+version = "0.1.0"
+description = "JSON, TOML and MessagePack serialization with byte-identical results across Python, Rust, TypeScript, Go and PHP. Pure Python, zero dependencies."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "codinglombok" }]
+requires-python = ">=3.9"
+keywords = ["json", "toml", "msgpack", "messagepack", "serialization", "deterministic"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/codinglombok/LombokSerde"
+Issues = "https://github.com/codinglombok/LombokSerde/issues"
+
+[tool.setuptools]
+packages = ["lombokserde"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]

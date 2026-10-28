@@ -1,14 +1,41 @@
-"""LombokSerde — JSON, TOML, MessagePack serialization/deserialization."""
+"""LombokSerde — zero-dependency serialization with byte-identical
+behavior across languages: JSON (RFC 8259), TOML (v1.0), MessagePack.
 
-from .error import SerdeError, SerdeErrorCode
-from .value import Value, DateTimeValue, is_datetime, is_map, type_name
+The Python port consumes the shared deterministic vectors in
+vectors/lombokserde-vectors-v1.json. See docs/SPEC_LombokSerde_v0.1.0.md
+for the normative specification.
+"""
 
-from . import json
-from . import toml
-from . import msgpack
+from ._json import JsonOptions, json_decode, json_encode
+from ._msgpack import MsgPackOptions, msgpack_decode, msgpack_encode
+from ._toml import TomlOptions, toml_decode, toml_encode
+from .error import SerdeError
+from .value import (
+    DEFAULT_DEPTH_LIMIT,
+    Datetime,
+    DatetimeKind,
+    Value,
+    make_table,
+    table_get,
+)
+
+__version__ = "0.1.0"
 
 __all__ = [
-    'SerdeError', 'SerdeErrorCode',
-    'Value', 'DateTimeValue', 'is_datetime', 'is_map', 'type_name',
-    'json', 'toml', 'msgpack',
+    "SerdeError",
+    "Value",
+    "Datetime",
+    "DatetimeKind",
+    "make_table",
+    "table_get",
+    "JsonOptions",
+    "json_decode",
+    "json_encode",
+    "TomlOptions",
+    "toml_decode",
+    "toml_encode",
+    "MsgPackOptions",
+    "msgpack_decode",
+    "msgpack_encode",
+    "DEFAULT_DEPTH_LIMIT",
 ]

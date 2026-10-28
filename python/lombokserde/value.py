@@ -1,56 +1,86 @@
-"""Value type definitions for LombokSerde."""
+"""The canonical value model shared by all formats and all ports (SPEC)."""
 
-from typing import Any, Dict, List, Optional, Union
+from __future__ import annotations
 
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import Any, Callable
 
-class DateTimeValue:
-    """Represents a TOML datetime value."""
-    __slots__ = ('kind', 'value')
+DEFAULT_DEPTH_LIMIT = 128
 
-    def __init__(self, kind: str, value: str):
-        self.kind = kind  # 'offset', 'local-datetime', 'local-date', 'local-time'
-        self.value = value
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, DateTimeValue):
-            return NotImplemented
-        return self.kind == other.kind and self.value == other.value
-
-    def __repr__(self) -> str:
-        return f"DateTimeValue(kind={self.kind!r}, value={self.value!r})"
+INT64_MIN = -(2**63)
+INT64_MAX = 2**63 - 1
+UINT64_MAX = 2**64 - 1
 
 
-# Value = None | bool | int | float | str | bytes | DateTimeValue | List[Value] | Dict[str, Value]
-Value = Any
+class DatetimeKind(str):
+    """Datetime kind tag; a plain string ('offset', 'localdt', 'date', 'time')."""
 
 
-def is_datetime(v: Any) -> bool:
-    return isinstance(v, DateTimeValue)
+OFFSET = DatetimeKind("offset")
+LOCAL_DATETIME = DatetimeKind("localdt")
+LOCAL_DATE = DatetimeKind("date")
+LOCAL_TIME = DatetimeKind("time")
 
 
-def is_map(v: Any) -> bool:
-    return isinstance(v, dict)
+@dataclass(frozen=True)
+class Datetime:
+    """Convenience constructor payload: ``("datetime", kind, raw)``."""
+
+    kind: DatetimeKind
+    raw: str
+
+    def to_value(self) -> tuple[Any, ...]:
+        return ("datetime", DatetimeKind(self.kind), self.raw)
 
 
-def type_name(v: Any) -> str:
-    if v is None:
-        return "null"
-    if isinstance(v, bool):
-        return "bool"
-    if isinstance(v, int):
-        return "integer"
-    if isinstance(v, float):
-        return "float"
-    if isinstance(v, str):
-        return "string"
-    if isinstance(v, bytes):
-        return "bytes"
-    if isinstance(v, bytearray):
-        return "bytes"
-    if isinstance(v, DateTimeValue):
-        return "datetime"
-    if isinstance(v, list):
-        return "array"
-    if isinstance(v, dict):
-        return "map"
-    return "unknown"
+# Tagged tuples keep the model exact and cross-language faithful:
+# ("null",) ("bool", b) ("int", i) ("uint", u) ("float", f) ("str", s)
+# ("bytes", b) ("array", [v...]) ("table", [(k, v)...]) ("datetime", dt)
+Value = Any  # tagged tuple: ("null",) | ("bool", b) | ... (see module docstring)
+
+TablePair = tuple[str, Any]
+
+
+def _bytewise_key(k: str) -> bytes:
+    return k.encode("utf-8")
+
+
+def make_table(
+    pairs: Iterable[tuple[str, Any]], dup_error: Callable[[], Exception]
+) -> Any:
+    """Build a table: sorted bytewise by key, duplicates are an error."""
+    out: list[TablePair] = []
+    for k, v in sorted(pairs, key=lambda kv: _bytewise_key(kv[0])):
+        if out and out[-1][0] == k:
+            raise dup_error()
+        out.append((k, v))
+    return ("table", out)
+
+
+def table_unchecked(pairs: Iterable[TablePair]) -> Any:
+    """Build a table from pairs known to be duplicate-free."""
+    return ("table", sorted(pairs, key=lambda kv: _bytewise_key(kv[0])))
+
+
+def table_get(v: Any, key: str) -> Any | None:
+    """Look up a key in a table value (binary search, bytewise order)."""
+    if not (isinstance(v, tuple) and v and v[0] == "table"):
+        return None
+    pairs = v[1]
+    kb = key.encode("utf-8")
+    lo, hi = 0, len(pairs)
+    while lo < hi:
+        mid = (lo + hi) // 2
+        c = _cmp(pairs[mid][0].encode("utf-8"), kb)
+        if c == 0:
+            return pairs[mid][1]
+        if c < 0:
+            lo = mid + 1
+        else:
+            hi = mid
+    return None
+
+
+def _cmp(a: bytes, b: bytes) -> int:
+    return (a > b) - (a < b)

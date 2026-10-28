@@ -1,36 +1,24 @@
-"""Serde error types."""
+"""Error type shared by every LombokSerde port (SPEC section 6)."""
 
-from enum import Enum
-from typing import Optional
-
-
-class SerdeErrorCode(Enum):
-    SYNTAX_ERROR = "SyntaxError"
-    UNEXPECTED_EOF = "UnexpectedEof"
-    TYPE_MISMATCH = "TypeMismatch"
-    MISSING_FIELD = "MissingField"
-    UNKNOWN_FIELD = "UnknownField"
-    OUT_OF_RANGE = "OutOfRange"
-    DEPTH_EXCEEDED = "DepthExceeded"
-    INVALID_UNICODE = "InvalidUnicode"
-    DUPLICATE_KEY = "DuplicateKey"
-    UNSUPPORTED = "Unsupported"
-    CUSTOM = "Custom"
+from __future__ import annotations
 
 
 class SerdeError(Exception):
-    def __init__(
-        self,
-        code: SerdeErrorCode,
-        message: str,
-        line: Optional[int] = None,
-        column: Optional[int] = None,
-    ):
+    """`[CODE] message` and, with a position, `[CODE] message (at byte N)`.
+
+    ``code`` is one of the stable ``SERDE_*`` codes listed in the SPEC;
+    ``offset`` is the byte offset into the input when one applies.
+    """
+
+    def __init__(self, code: str, message: str, offset: int | None) -> None:
         self.code = code
         self.message = message
-        self.line = line
-        self.column = column
-        if line is not None and column is not None:
-            super().__init__(f"{code.value}: {message} at line {line}, col {column}")
+        self.offset = offset
+        if offset is None:
+            super().__init__(f"[{code}] {message}")
         else:
-            super().__init__(f"{code.value}: {message}")
+            super().__init__(f"[{code}] {message} (at byte {offset})")
+
+
+def syntax_err(code: str, offset: int, detail: str) -> SerdeError:
+    return SerdeError(code, detail, offset)
