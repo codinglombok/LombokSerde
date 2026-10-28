@@ -1,0 +1,136 @@
+# Release — publishes each port on a v* tag after re-running its tests.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Tag matches every manifest
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          grep -q "^version = \"$v\"" rust/Cargo.toml
+          grep -q "\"version\": \"$v\"" typescript/package.json
+          grep -q "^version = \"$v\"" python/pyproject.toml
+          grep -q "__version__ = \"$v\"" python/lombokserde/__init__.py
+          bash scripts/lombok-doctor.sh LombokSerde
+
+  crates:
+    needs: check-version
+    environment: crates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+        with:
+          toolchain: stable
+      - run: cargo test
+      - run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  npm:
+    needs: check-version
+    environment: npm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  pypi:
+    needs: check-version
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - run: python -m pip install pytest build
+      - run: python -m pytest -q
+        working-directory: python
+      - run: python -m build
+        working-directory: python
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        with:
+          packages-dir: python/dist
+
+  go-tag:
+    # Go modules are versioned with git tags; subdirectory modules need the
+    # extra go/v<version> tag. Idempotent: skipped when the tag already exists.
+    needs: check-version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Push the go/v* module tag (skip when it already exists)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          VERSION="$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' typescript/package.json | head -1)"
+          TAG="go/v${VERSION}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "tag ${TAG} already exists; skipping"
+            exit 0
+          fi
+          git tag -a "${TAG}" -m "LombokSerde Go module v${VERSION} (github.com/codinglombok/lombokserde/go)"
+          git push origin "${TAG}"
+
+  github-release:
+    # Creates the GitHub Release with a checksummed source bundle. The bundle
+    # is built with git archive, so it contains tracked files only (internal
+    # documents stay out, ADR-024).
+    needs: [check-version, go-tag]
+    runs-on: ubuntu-latest
+    environment: github-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build the public source bundle (tracked files only)
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          git archive --format=zip --prefix="LombokSerde_${VERSION}/" \
+            -o "${RUNNER_TEMP}/LombokSerde_${VERSION}_bundle.zip" HEAD
+          cd "${RUNNER_TEMP}"
+          sha256sum "LombokSerde_${VERSION}_bundle.zip" > SHA256SUMS
+          sha256sum -c SHA256SUMS
+      - name: Create the GitHub Release and upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "LombokSerde ${VERSION}" \
+            --generate-notes \
+            "${RUNNER_TEMP}/LombokSerde_${VERSION}_bundle.zip" \
+            "${RUNNER_TEMP}/SHA256SUMS"

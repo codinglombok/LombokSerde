@@ -473,17 +473,30 @@ test('u64_string_math', function (): void {
     }
 });
 
-// --- runner --------------------------------------------------------------------------
+// --- runner ---
 
-foreach ($tests as [$name, $fn]) {
-    try {
-        $fn();
-        $passed++;
-        echo "ok   {$name}\n";
-    } catch (Throwable $e) {
-        $failed++;
-        echo "FAIL {$name}: {$e->getMessage()} @ {$e->getFile()}:{$e->getLine()}\n";
+function run_unit_suite(): array
+{
+    global $tests, $passed, $failed;
+    $passed = 0;
+    $failed = 0;
+
+    foreach ($tests as [$name, $fn]) {
+        try {
+            $fn();
+            $passed++;
+            echo "ok   {$name}\n";
+        } catch (Throwable $e) {
+            $failed++;
+            echo "FAIL {$name}: {$e->getMessage()} @ {$e->getFile()}:{$e->getLine()}\n";
+        }
     }
+    echo "units: " . \count($tests) . " tests, {$passed} passed, {$failed} failed\n";
+
+    return [$passed, $failed];
 }
-echo "units: " . \count($tests) . " tests, {$passed} passed, {$failed} failed\n";
-exit($failed === 0 ? 0 : 1);
+
+if (!\defined('LOMBOKSERDE_INCLUDED')) {
+    [$_p, $_f] = run_unit_suite();
+    exit($_f === 0 ? 0 : 1);
+}

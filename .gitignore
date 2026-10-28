@@ -1,50 +1,54 @@
-# ===== Lombok Ecosystem — dokumen internal (tidak di-commit; ADR-024) =====
+# Rust
+rust/target/
+**/*.rs.bk
+
+# TypeScript / Node
+typescript/node_modules/
+node_modules/
+typescript/dist/
+typescript/*.tgz
+
+# Python
+python/__pycache__/
+python/**/__pycache__/
+python/*.egg-info/
+python/dist/
+python/build/
+python/.pytest_cache/
+python/.coverage
+*.pyc
+*.pyo
+
+# Go
+go/bin/
+go/cover.out
+
+# PHP
+php/vendor/
+php/.phpunit.result.cache
+php/.phpunit.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.zip
+
+# Dokumen internal (ADR-024)
 /map
+/docs/*architecture*.*
+/docs/*masterplan*.*
+
+# ===== Lombok Ecosystem — dokumen internal (tidak di-commit) =====
 /Map_*.md
 /SPEC_*.md
 /Stucture Repo_*.md
 /TECH DEBT_*.md
 /Architecture_*.md
 /Masterplan_*.md
-/docs/*architecture*.*
-/docs/*masterplan*.*
-/docs/Architecture_*.md
-/docs/Masterplan_*.md
-/docs/TECH DEBT_*.md
-
-# Rust
-/rust/target/
-**/*.rs.bk
-
-# Node / TypeScript
-node_modules/
-/typescript/dist/
-/typescript/node_modules/
-*.tsbuildinfo
-
-# Python
-__pycache__/
-*.pyc
-.pytest_cache/
-*.egg-info/
-/python/dist/
-/python/build/
-.mypy_cache/
-.ruff_cache/
-/coverage.xml
-/htmlcov/
-
-# Go
-/go/vendor/
-/go/cover.out
-
-# PHP
-/php/vendor/
-/php/.phpunit.result.cache
-
-# OS / editor
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp

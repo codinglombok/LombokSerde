@@ -330,7 +330,9 @@ function checkCase(array $c): ?string
     return null;
 }
 
-$raw = \file_get_contents(VECTORS_PATH);
+function run_vector_suite(): array
+{
+    $raw = \file_get_contents(VECTORS_PATH);
 if ($raw === false) {
     fwrite(STDERR, "vectors file missing\n");
     exit(2);
@@ -353,4 +355,10 @@ foreach ($cases->array as $caseV) {
     }
 }
 echo "vectors: {$total} cases, {$failures} failures\n";
-exit($failures === 0 ? 0 : 1);
+return [$total, $failures];
+}
+
+if (!\defined('LOMBOKSERDE_INCLUDED')) {
+    [$_t, $_f] = run_vector_suite();
+    exit($_f === 0 ? 0 : 1);
+}
