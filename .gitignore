@@ -52,3 +52,6 @@ Thumbs.db
 /TECH DEBT_*.md
 /Architecture_*.md
 /Masterplan_*.md
+
+# Test coverage output
+typescript/coverage/
