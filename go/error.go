@@ -2,71 +2,55 @@ package lombokserde
 
 import "fmt"
 
-// SerdeErrorCode represents error categories.
-type SerdeErrorCode int
-
+// Stable error codes shared across all ports (SPEC section 6).
 const (
-	ErrSyntaxError   SerdeErrorCode = iota
-	ErrUnexpectedEof
-	ErrTypeMismatch
-	ErrMissingField
-	ErrUnknownField
-	ErrOutOfRange
-	ErrDepthExceeded
-	ErrInvalidUnicode
-	ErrDuplicateKey
-	ErrUnsupported
-	ErrCustom
+	ErrJSONSyntax     = "SERDE_JSON_SYNTAX"
+	ErrJSONUTF8       = "SERDE_JSON_UTF8"
+	ErrJSONDepth      = "SERDE_JSON_DEPTH"
+	ErrJSONTrailing   = "SERDE_JSON_TRAILING"
+	ErrJSONIntRange   = "SERDE_JSON_INT_RANGE"
+	ErrJSONFloatNaN   = "SERDE_JSON_FLOAT_NANINF"
+	ErrJSONBytes      = "SERDE_JSON_BYTES"
+	ErrJSONDatetime   = "SERDE_JSON_DATETIME"
+	ErrTOMLSyntax     = "SERDE_TOML_SYNTAX"
+	ErrTOMLUTF8       = "SERDE_TOML_UTF8"
+	ErrTOMLDuplicate  = "SERDE_TOML_DUPLICATE"
+	ErrTOMLDepth      = "SERDE_TOML_DEPTH"
+	ErrTOMLRoot       = "SERDE_TOML_ROOT"
+	ErrTOMLBytes      = "SERDE_TOML_BYTES"
+	ErrTOMLDatetime   = "SERDE_TOML_DATETIME"
+	ErrMPTruncated    = "SERDE_MP_TRUNCATED"
+	ErrMPUnexpected   = "SERDE_MP_UNEXPECTED"
+	ErrMPTrailing     = "SERDE_MP_TRAILING"
+	ErrMPUTF8         = "SERDE_MP_UTF8"
+	ErrMPExt          = "SERDE_MP_EXT"
+	ErrMPDepth        = "SERDE_MP_DEPTH"
+	ErrMPDuplicate    = "SERDE_MP_DUPLICATE"
+	ErrMPDatetime     = "SERDE_MP_DATETIME"
+	ErrTableDuplicate = "SERDE_TABLE_DUPLICATE"
 )
 
-func (c SerdeErrorCode) String() string {
-	switch c {
-	case ErrSyntaxError:
-		return "SyntaxError"
-	case ErrUnexpectedEof:
-		return "UnexpectedEof"
-	case ErrTypeMismatch:
-		return "TypeMismatch"
-	case ErrMissingField:
-		return "MissingField"
-	case ErrUnknownField:
-		return "UnknownField"
-	case ErrOutOfRange:
-		return "OutOfRange"
-	case ErrDepthExceeded:
-		return "DepthExceeded"
-	case ErrInvalidUnicode:
-		return "InvalidUnicode"
-	case ErrDuplicateKey:
-		return "DuplicateKey"
-	case ErrUnsupported:
-		return "Unsupported"
-	case ErrCustom:
-		return "Custom"
-	default:
-		return "Unknown"
-	}
-}
-
-// SerdeError is the error type for serialization/deserialization.
-type SerdeError struct {
-	Code    SerdeErrorCode
+// Error is the shared error type: `[CODE] message` and, with a position,
+// `[CODE] message (at byte N)`.
+type Error struct {
+	Code    string
 	Message string
-	Line    int
-	Column  int
+	// Offset is the byte offset into the input, when one applies.
+	Offset *int
 }
 
-func (e *SerdeError) Error() string {
-	if e.Line > 0 {
-		return fmt.Sprintf("%s: %s at line %d, col %d", e.Code, e.Message, e.Line, e.Column)
+// NewError builds an Error; offset may be nil.
+func NewError(code, message string, offset *int) *Error {
+	return &Error{Code: code, Message: message, Offset: offset}
+}
+
+func (e *Error) Error() string {
+	if e.Offset != nil {
+		return fmt.Sprintf("[%s] %s (at byte %d)", e.Code, e.Message, *e.Offset)
 	}
-	return fmt.Sprintf("%s: %s", e.Code, e.Message)
+	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }
 
-func newError(code SerdeErrorCode, msg string) *SerdeError {
-	return &SerdeError{Code: code, Message: msg}
-}
-
-func newErrorAt(code SerdeErrorCode, msg string, line, col int) *SerdeError {
-	return &SerdeError{Code: code, Message: msg, Line: line, Column: col}
+func syntaxErr(code string, offset int, detail string) *Error {
+	return NewError(code, detail, &offset)
 }

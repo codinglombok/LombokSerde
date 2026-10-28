@@ -1,3 +1,3 @@
-module github.com/codinglombok/LombokSerde/go
+module github.com/codinglombok/lombokserde/go
 
-go 1.21
+go 1.22
