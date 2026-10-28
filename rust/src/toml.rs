@@ -394,9 +394,7 @@ impl<'a> TomlParser<'a> {
         let v = self.parse_value((self.cur.len() + keys.len() + 1) as u32)?;
         let base = self.resolve(&self.cur);
         let inter = keys[..keys.len().saturating_sub(1)].to_vec();
-        if !inter.is_empty()
-            && self.root.get(&base).map(|n| n.state) == Some(State::Aot)
-        {
+        if !inter.is_empty() && self.root.get(&base).map(|n| n.state) == Some(State::Aot) {
             // v1: dotted keys cannot extend array-of-tables elements
             return Err(err(
                 E_SYNTAX,
@@ -460,6 +458,9 @@ impl<'a> TomlParser<'a> {
     // --- values ---------------------------------------------------------------
 
     fn parse_value(&mut self, depth: u32) -> Result<Value, SerdeError> {
+        if depth > self.limit {
+            return Err(err(E_DEPTH, self.i, "depth limit exceeded"));
+        }
         let c = match self.peek() {
             None => return Err(self.fail("expected value")),
             Some(c) => c,

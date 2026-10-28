@@ -28,22 +28,58 @@ fn s(x: &str) -> Value {
 
 #[test]
 fn float_presentation_all_regimes() {
-    assert_eq!(dec(json_encode(&f(0.0), &JsonOptions::default()).unwrap()), "0.0");
-    assert_eq!(dec(json_encode(&f(-0.0), &JsonOptions::default()).unwrap()), "-0.0");
-    assert_eq!(dec(json_encode(&f(1.0), &JsonOptions::default()).unwrap()), "1.0");
-    assert_eq!(dec(json_encode(&f(-1.5), &JsonOptions::default()).unwrap()), "-1.5");
-    assert_eq!(dec(json_encode(&f(0.001), &JsonOptions::default()).unwrap()), "0.001");
-    assert_eq!(dec(json_encode(&f(1e-6), &JsonOptions::default()).unwrap()), "0.000001");
-    assert_eq!(dec(json_encode(&f(1e-7), &JsonOptions::default()).unwrap()), "1e-7");
-    assert_eq!(dec(json_encode(&f(2.5e-10), &JsonOptions::default()).unwrap()), "2.5e-10");
+    assert_eq!(
+        dec(json_encode(&f(0.0), &JsonOptions::default()).unwrap()),
+        "0.0"
+    );
+    assert_eq!(
+        dec(json_encode(&f(-0.0), &JsonOptions::default()).unwrap()),
+        "-0.0"
+    );
+    assert_eq!(
+        dec(json_encode(&f(1.0), &JsonOptions::default()).unwrap()),
+        "1.0"
+    );
+    assert_eq!(
+        dec(json_encode(&f(-1.5), &JsonOptions::default()).unwrap()),
+        "-1.5"
+    );
+    assert_eq!(
+        dec(json_encode(&f(0.001), &JsonOptions::default()).unwrap()),
+        "0.001"
+    );
+    assert_eq!(
+        dec(json_encode(&f(1e-6), &JsonOptions::default()).unwrap()),
+        "0.000001"
+    );
+    assert_eq!(
+        dec(json_encode(&f(1e-7), &JsonOptions::default()).unwrap()),
+        "1e-7"
+    );
+    assert_eq!(
+        dec(json_encode(&f(2.5e-10), &JsonOptions::default()).unwrap()),
+        "2.5e-10"
+    );
     assert_eq!(
         dec(json_encode(&f(1e20), &JsonOptions::default()).unwrap()),
         "100000000000000000000.0"
     );
-    assert_eq!(dec(json_encode(&f(1e21), &JsonOptions::default()).unwrap()), "1e+21");
-    assert_eq!(dec(json_encode(&f(-1.5e300), &JsonOptions::default()).unwrap()), "-1.5e+300");
-    assert_eq!(dec(json_encode(&f(5e-324), &JsonOptions::default()).unwrap()), "5e-324");
-    assert_eq!(dec(json_encode(&f(123.456), &JsonOptions::default()).unwrap()), "123.456");
+    assert_eq!(
+        dec(json_encode(&f(1e21), &JsonOptions::default()).unwrap()),
+        "1e+21"
+    );
+    assert_eq!(
+        dec(json_encode(&f(-1.5e300), &JsonOptions::default()).unwrap()),
+        "-1.5e+300"
+    );
+    assert_eq!(
+        dec(json_encode(&f(5e-324), &JsonOptions::default()).unwrap()),
+        "5e-324"
+    );
+    assert_eq!(
+        dec(json_encode(&f(123.456), &JsonOptions::default()).unwrap()),
+        "123.456"
+    );
     assert_eq!(
         dec(json_encode(&f(12.5), &JsonOptions::default()).unwrap()),
         "12.5"
@@ -63,9 +99,7 @@ fn json_extras() {
     assert!(json_decode(&enc("1e+"), &JsonOptions::default()).is_err());
     assert!(json_decode(&enc("1ex"), &JsonOptions::default()).is_err());
     // encode depth on tables
-    let deep = table(vec![
-        ("a", table(vec![("b", table(vec![("c", i(1))]))])),
-    ]);
+    let deep = table(vec![("a", table(vec![("b", table(vec![("c", i(1))]))]))]);
     let e = json_encode(&deep, &JsonOptions { depth_limit: 2 }).unwrap_err();
     assert_eq!(e.code, "SERDE_JSON_DEPTH");
     assert!(e.offset.is_none());
@@ -77,7 +111,13 @@ fn json_extras() {
 
 #[test]
 fn msgpack_size_families() {
-    let rt = |v: Value| msgpack_decode(&msgpack_encode(&v, &MsgPackOptions::default()).unwrap(), &MsgPackOptions::default()).unwrap();
+    let rt = |v: Value| {
+        msgpack_decode(
+            &msgpack_encode(&v, &MsgPackOptions::default()).unwrap(),
+            &MsgPackOptions::default(),
+        )
+        .unwrap()
+    };
     assert_eq!(rt(Value::UInt(255)), i(255));
     assert_eq!(rt(Value::UInt(65535)), i(65535));
     assert_eq!(rt(Value::UInt(4294967295)), i(4294967295));
@@ -98,11 +138,7 @@ fn msgpack_size_families() {
     assert_eq!(rt(b.clone()), b);
     let a = Value::Array(vec![Value::Null; 65537]);
     assert_eq!(rt(a.clone()), a);
-    let m = Value::table(
-        (0..65537)
-            .map(|j| (format!("k{j}"), i(j as i64)))
-            .collect(),
-    );
+    let m = Value::table((0..65537).map(|j| (format!("k{j}"), i(j as i64))).collect());
     assert_eq!(rt(m.clone()), m);
 }
 
@@ -129,19 +165,12 @@ fn msgpack_depth_and_timestamps() {
     let e = msgpack_decode(&bad96, &MsgPackOptions::default()).unwrap_err();
     assert_eq!(e.code, "SERDE_MP_UNEXPECTED");
     // ext8 carrier with a valid ts32 payload
-    let ts = msgpack_decode(
-        &[0xc7, 4, 0xff, 1, 2, 3, 4],
-        &MsgPackOptions::default(),
-    )
-    .unwrap();
+    let ts = msgpack_decode(&[0xc7, 4, 0xff, 1, 2, 3, 4], &MsgPackOptions::default()).unwrap();
     let direct = msgpack_decode(&[0xd6, 0xff, 1, 2, 3, 4], &MsgPackOptions::default()).unwrap();
     assert_eq!(ts, direct);
     // calendar roundtrips
     assert_eq!(lombokserde::__private::days_from_civil(1979, 5, 27), 3433);
-    assert_eq!(
-        lombokserde::__private::civil_from_days(3433),
-        (1979, 5, 27)
-    );
+    assert_eq!(lombokserde::__private::civil_from_days(3433), (1979, 5, 27));
 }
 
 #[test]
@@ -182,7 +211,11 @@ fn toml_redefinition_matrix() {
         _ => panic!("expected array"),
     }
     // table under AoT element
-    let d = toml_decode(&enc("[[a]]\nx = 1\n[a.b]\ny = 2\n"), &TomlOptions::default()).unwrap();
+    let d = toml_decode(
+        &enc("[[a]]\nx = 1\n[a.b]\ny = 2\n"),
+        &TomlOptions::default(),
+    )
+    .unwrap();
     match d.get("a").unwrap() {
         Value::Array(items) => {
             assert!(items[0].get("b").is_some());
@@ -211,7 +244,11 @@ fn toml_escape_and_number_battery() {
     let d = toml_decode(&enc("a = \"\"\"\"\"\"\"\"\n"), &TomlOptions::default()).unwrap();
     assert_eq!(d.get("a").unwrap(), &s("\"\""));
     // line-ending backslash
-    let d = toml_decode(&enc("a = \"\"\"x\\\n    y\"\"\"\n"), &TomlOptions::default()).unwrap();
+    let d = toml_decode(
+        &enc("a = \"\"\"x\\\n    y\"\"\"\n"),
+        &TomlOptions::default(),
+    )
+    .unwrap();
     assert_eq!(d.get("a").unwrap(), &s("xy"));
     // numbers
     assert!(toml_decode(&enc("a = 1e_"), &TomlOptions::default()).is_err());
@@ -244,17 +281,28 @@ fn toml_escape_and_number_battery() {
     assert!(out.contains("nan = nan"));
     // bytes at root and nested
     assert!(toml_encode(&Value::Bytes(vec![1]), &TomlOptions::default()).is_err());
-    let e = toml_encode(&table(vec![("b", Value::Bytes(vec![1]))]), &TomlOptions::default()).unwrap_err();
+    let e = toml_encode(
+        &table(vec![("b", Value::Bytes(vec![1]))]),
+        &TomlOptions::default(),
+    )
+    .unwrap_err();
     assert_eq!(e.code, "SERDE_TOML_BYTES");
     // null is not a TOML value
     let e = toml_encode(&table(vec![("n", Value::Null)]), &TomlOptions::default()).unwrap_err();
     assert_eq!(e.code, "SERDE_TOML_SYNTAX");
     // uint overflow for TOML
-    let e = toml_encode(&table(vec![("u", Value::UInt(u64::MAX))]), &TomlOptions::default()).unwrap_err();
+    let e = toml_encode(
+        &table(vec![("u", Value::UInt(u64::MAX))]),
+        &TomlOptions::default(),
+    )
+    .unwrap_err();
     assert_eq!(e.code, "SERDE_TOML_SYNTAX");
     // bad datetime raw
     let e = toml_encode(
-        &table(vec![("d", Value::Datetime(Datetime::new(DatetimeKind::Offset, "nope")))]),
+        &table(vec![(
+            "d",
+            Value::Datetime(Datetime::new(DatetimeKind::Offset, "nope")),
+        )]),
         &TomlOptions::default(),
     )
     .unwrap_err();
@@ -262,7 +310,10 @@ fn toml_escape_and_number_battery() {
     // datetime raw roundtrips verbatim
     let doc = table(vec![(
         "d",
-        Value::Datetime(Datetime::new(DatetimeKind::LocalDateTime, "1979-05-27t07:32:00")),
+        Value::Datetime(Datetime::new(
+            DatetimeKind::LocalDateTime,
+            "1979-05-27t07:32:00",
+        )),
     )]);
     let out = dec(toml_encode(&doc, &TomlOptions::default()).unwrap());
     assert!(out.contains("d = 1979-05-27t07:32:00"));
@@ -295,7 +346,10 @@ fn decoder_mutation_property() {
             "json",
             json_encode(
                 &table(vec![
-                    ("a", Value::Array(vec![i(1), f(2.5), s("x"), Value::Bool(true), Value::Null])),
+                    (
+                        "a",
+                        Value::Array(vec![i(1), f(2.5), s("x"), Value::Bool(true), Value::Null]),
+                    ),
                     ("é", f(-0.5)),
                 ]),
                 &JsonOptions::default(),
@@ -313,7 +367,10 @@ fn decoder_mutation_property() {
                     ("a", Value::Array(vec![i(1), f(2.5), s("x")])),
                     (
                         "b",
-                        Value::Datetime(Datetime::new(DatetimeKind::Offset, "2024-01-01T00:00:00Z")),
+                        Value::Datetime(Datetime::new(
+                            DatetimeKind::Offset,
+                            "2024-01-01T00:00:00Z",
+                        )),
                     ),
                 ]),
                 &MsgPackOptions::default(),
@@ -335,7 +392,7 @@ fn decoder_mutation_property() {
         }
         // byte flips
         let mut rng = XorShift(0x5eed ^ bytes.len() as u32);
-        for iter in 0..1200 {
+        for _iter in 0..1200 {
             let mut m = bytes.clone();
             let pos = (rng.next() as usize) % m.len();
             m[pos] ^= (1 + (rng.next() % 255)) as u8;
