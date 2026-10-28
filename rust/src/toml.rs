@@ -1063,7 +1063,7 @@ fn nest_dotted(keys: &[String], v: Value) -> Value {
 fn is_bare_key_byte(c: u8) -> bool {
     c.is_ascii_alphanumeric() || c == b'_' || c == b'-'
 }
-pub(crate) fn datetime_ok(text: &str, kind: DatetimeKind) -> bool {
+pub fn datetime_ok(text: &str, kind: DatetimeKind) -> bool {
     let b = text.as_bytes();
     let seg = |from: usize, to: usize| -> Option<i64> {
         let s = &b[from..to];

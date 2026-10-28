@@ -33,3 +33,11 @@ pub use value::{Datetime, DatetimeKind, Value};
 
 /// Default maximum container nesting depth for every format and port.
 pub const DEFAULT_DEPTH_LIMIT: u32 = 128;
+
+/// Implementation details shared with the test suites of this crate.
+/// Not part of the semver-stable public API.
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::msgpack::{civil_from_days, days_from_civil, format_timestamp};
+    pub use crate::toml::datetime_ok;
+}
