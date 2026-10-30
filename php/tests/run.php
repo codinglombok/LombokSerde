@@ -29,6 +29,7 @@ global $tests;
 $tests = [];
 
 require __DIR__ . '/units.php';
+require __DIR__ . '/extra.php';
 [$up, $uf] = run_unit_suite();
 
 require __DIR__ . '/vectors.php';
