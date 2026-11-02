@@ -19,11 +19,11 @@ Part of the [Lombok Ecosystem](https://github.com/codinglombok).
 
 | Language | Package | Status |
 |---|---|---|
-| Rust | `lombokserde` (crates.io) | not yet published |
-| TypeScript / JavaScript | `lombokserde` (npm) | not yet published |
-| Python | `lombokserde` (PyPI) | not yet published |
-| Go | `github.com/codinglombok/lombokserde/go` | tag `go/v0.1.0` on release |
-| PHP | `codinglombok/lombokserde` (Packagist) | not yet published |
+| Rust | `lombokserde` (crates.io) | published — `0.1.0` |
+| TypeScript / JavaScript | `lombokserde` (npm) | published — `0.1.0` |
+| Python | `lombokserde` (PyPI) | publishes on tag `v0.1.0` |
+| Go | `github.com/codinglombok/lombokserde/go` | published — tag `go/v0.1.0` |
+| PHP | `codinglombok/lombokserde` (Packagist) | pending Packagist submission |
 
 ## Quick start
 
@@ -40,10 +40,10 @@ assert_eq!(bytes, br#"{"hello":"world"}"#);
 ### TypeScript
 
 ```typescript
-import { json, table } from 'lombokserde';
+import { jsonDecode, jsonEncodeText } from 'lombokserde';
 
-const v = json.decode('{"hello": "world"}');
-const out = json.encode(v); // '{"hello":"world"}'
+const v = jsonDecode(new TextEncoder().encode('{"hello": "world"}'));
+const out = jsonEncodeText(v); // '{"hello":"world"}'
 ```
 
 ### Python
@@ -51,8 +51,8 @@ const out = json.encode(v); // '{"hello":"world"}'
 ```python
 import lombokserde as ls
 
-v = ls.json_decode('{"hello": "world"}')
-out = ls.json_encode(v)  # '{"hello":"world"}'
+v = ls.json_decode(b'{"hello": "world"}')
+out = ls.json_encode(v)  # b'{"hello":"world"}'
 ```
 
 ### Go

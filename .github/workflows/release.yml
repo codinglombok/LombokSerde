@@ -35,7 +35,19 @@ jobs:
         with:
           toolchain: stable
       - run: cargo test
+      - name: Publish (skip when this version is already on crates.io)
+        id: publish
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          have="$(curl -sf -A 'lombokserde-release-ci' 'https://crates.io/api/v1/crates/lombokserde' | jq -r '.crate.max_version // empty' || true)"
+          if [ "$have" = "$VERSION" ]; then
+            echo "lombokserde ${VERSION} already on crates.io; skipping publish"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - run: cargo publish
+        if: steps.publish.outputs.skip != 'true'
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
@@ -58,7 +70,18 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Publish (skip when this version is already on npm)
+        id: publish
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if [ -n "$(npm view "lombokserde@${VERSION}" version 2>/dev/null)" ]; then
+            echo "lombokserde ${VERSION} already on npm; skipping publish"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - run: npm publish --provenance --access public
+        if: steps.publish.outputs.skip != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -79,7 +102,18 @@ jobs:
         working-directory: python
       - run: python -m build
         working-directory: python
+      - name: Skip publish when this version is already on PyPI
+        id: publish
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if curl -sf 'https://pypi.org/pypi/lombokserde/json' | jq -e --arg v "$VERSION" '(.releases[$v] // []) | length > 0' > /dev/null; then
+            echo "lombokserde ${VERSION} already on PyPI; skipping publish"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+        if: steps.publish.outputs.skip != 'true'
         with:
           packages-dir: python/dist
 
